@@ -27,7 +27,7 @@ void function(win) {
     // 配置项
     var config = {
         // 心跳时间（三分钟）
-        heartbeatsTime: 1 * 60 * 1000
+        heartbeatsTime: 3 * 60 * 1000
     };
 
     // 命名空间，挂载一些工具方法
@@ -67,6 +67,8 @@ void function(win) {
         var wsOpen = function() {
             tool.log('WebSocket opened.');
             engine.loginPush(cache.options);
+            // 启动心跳
+            engine.heartbeats();
         };
 
         // WebSocket Close
@@ -162,13 +164,11 @@ void function(win) {
             ws.addEventListener('close', wsClose);
             ws.addEventListener('message', wsMessage);
             ws.addEventListener('error', wsError);
-
-            // 启动心跳
-            engine.heartbeats();
         };
 
         // 心跳程序
         engine.heartbeats = function() {
+            wsSend({});
             cache.ws.addEventListener('message', function() {
                 if (cache.heartbeatsTimer) {
                     clearTimeout(cache.heartbeatsTimer);
@@ -195,7 +195,7 @@ void function(win) {
                 cmd: 'ack',
                 appId: cache.options.appId,
                 installationId: cache.options.id,
-                ids: idList           
+                ids: idList
             });
         };
 
@@ -203,7 +203,7 @@ void function(win) {
             wsSend({
                 cmd: 'login',
                 appId: options.appId,
-                installationId: options.id              
+                installationId: options.id
             });
         };
 
@@ -378,7 +378,7 @@ void function(win) {
     tool.eventCenter = function() {
         var eventList = {};
         var eventOnceList = {};
-        
+
         var _on = function(eventName, fun, isOnce) {
             if (!eventName) {
                 tool.error('No event name.');
