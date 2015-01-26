@@ -13,18 +13,17 @@ function createNew(callback) {
         appKey: appKey
     });
 
-    push.on('open', function() {
-        callback({
-            push: push
-        });
-    });
-
-    push.on('close', function() {
-        console.log('close');
+    push.open(function() {
+        console.log('可以接收推送');
     });
 
     push.on('message', function(data) {
         console.log('message');
         console.log(data);
+    });
+
+    push.send({
+        channels: ['aaa'],
+        data: {wangxiao: 123}
     });
 }
