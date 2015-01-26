@@ -27,7 +27,7 @@ void function(win) {
     // 配置项
     var config = {
         // 心跳时间（三分钟）
-        heartbeatsTime: 1 * 60 * 1000
+        heartbeatsTime: 3 * 60 * 1000
     };
 
     // 命名空间，挂载一些工具方法
@@ -67,6 +67,9 @@ void function(win) {
         var wsOpen = function() {
             tool.log('WebSocket opened.');
             engine.loginPush(cache.options);
+            // 启动心跳
+            engine.heartbeats();
+            cache.ec.emit(eNameIndex.open);
         };
 
         // WebSocket Close
@@ -91,7 +94,7 @@ void function(win) {
         };
 
         var wsError = function(data) {
-            tool.error(data);
+            new Error(data);
             // TODO: 增加更加详细的错误处理
         };
 
@@ -135,6 +138,7 @@ void function(win) {
                 appId: options.appId,
                 appKey: options.appKey,
                 data: {
+                    // TODO: 后续服务端要支持，改成 javascript
                     deviceType: 'android',
                     installationId: options.id,
                     channels: options.channels
@@ -143,6 +147,29 @@ void function(win) {
                 if (data.lcError) {
                     setTimeout(function() {
                         engine.sendId(options);
+                    }, 5000);
+                } else {
+                    if (callback) {
+                        callback(data);
+                    }
+                }
+            });
+        };
+
+        engine.sendPush = function(options, callback) {
+            tool.ajax({
+                url: 'https://leancloud.cn/1.1/push',
+                method: 'post',
+                appId: options.appId,
+                appKey: options.appKey,
+                data: {
+                    data: options.data
+                },
+                channels: options.channels
+            }, function(data) {
+                if (data.lcError) {
+                    setTimeout(function() {
+                        engine.sendPush(options, callback);
                     }, 5000);
                 } else {
                     if (callback) {
@@ -162,13 +189,11 @@ void function(win) {
             ws.addEventListener('close', wsClose);
             ws.addEventListener('message', wsMessage);
             ws.addEventListener('error', wsError);
-
-            // 启动心跳
-            engine.heartbeats();
         };
 
         // 心跳程序
         engine.heartbeats = function() {
+            wsSend({});
             cache.ws.addEventListener('message', function() {
                 if (cache.heartbeatsTimer) {
                     clearTimeout(cache.heartbeatsTimer);
@@ -185,7 +210,7 @@ void function(win) {
                 engine.createSocket(server.server);
             }
             else {
-                tool.error('WebSocket connet failed.');
+                new Error('WebSocket connet failed.');
                 // TODO: 派发一个 Error 事件
             }
         };
@@ -195,7 +220,7 @@ void function(win) {
                 cmd: 'ack',
                 appId: cache.options.appId,
                 installationId: cache.options.id,
-                ids: idList           
+                ids: idList
             });
         };
 
@@ -203,7 +228,7 @@ void function(win) {
             wsSend({
                 cmd: 'login',
                 appId: options.appId,
-                installationId: options.id              
+                installationId: options.id
             });
         };
 
@@ -242,6 +267,7 @@ void function(win) {
                         engine.connect({
                             server: cache.server
                         });
+                        cache.ec.once();
                     }
                     else {
                         callback(tool.fail());
@@ -258,38 +284,42 @@ void function(win) {
                 return this;
             },
             on: function(eventName, callback) {
-                this.cache.ec.on(eventName, callback);
+                cache.ec.on(eventName, callback);
                 return this;
             },
             once: function(eventName, callback) {
-                this.cache.ec.once(eventName, callback);
+                cache.ec.once(eventName, callback);
                 return this;
             },
             emit: function(eventName, data) {
-                this.cache.ec.emit(eventName, data);
+                cache.ec.emit(eventName, data);
+                return this;
+            },
+            send: function(options, callback) {
+                options.appId = cache.options.appId;
+                options.appKey = cache.options.appKey;
+                engine.sendPush(options, callback);
                 return this;
             }
         };
     };
 
     // 主函数，启动通信并获得 pushObject
-    lc.push = function(options, callback) {
+    lc.push = function(options) {
         if (typeof options !== 'object') {
-            tool.error('lc.push need a argument at least.');
+            new Error('lc.push need a argument at least.');
         }
         else if (!options.appId) {
-            tool.error('Options must have appId.');
+            new Error('Options must have appId.');
         }
         else if (!options.appKey) {
-            tool.error('Options must have appKey.');
+            new Error('Options must have appKey.');
         }
         else {
             var pushObject = newPushObject();
             options.id = engine.getId(options);
             pushObject.cache.options = options;
             pushObject.cache.ec = tool.eventCenter();
-            // 启动 websocket
-            pushObject.open(callback);
             return pushObject;
         }
     };
@@ -304,7 +334,7 @@ void function(win) {
     // 空函数
     tool.noop = function() {};
 
-    // 获取一个唯一 id
+    // 获取一个唯一 id, 碰撞概率同一毫秒小于万分之一
     tool.getId = function() {
         return 'lc' + (Date.now().toString(36) + Math.random().toString(36).substring(2, 3));
     };
@@ -314,11 +344,6 @@ void function(win) {
         obj = obj || {};
         obj.lcError = true;
         return obj;
-    };
-
-    // 输出错误信息
-    tool.error = function(msg) {
-        throw new Error(msg);
     };
 
     // 输出 log
@@ -346,9 +371,7 @@ void function(win) {
         };
         xhr.onerror = function() {
             callback(tool.fail());
-            tool.error('Network error.');
-            // TODO: 派发一个 Error 事件
-            cache.ec.emit('error', {type:'network'});
+            new Error('Network error.');
         };
         xhr.send(JSON.stringify(options.data));
     };
@@ -378,13 +401,13 @@ void function(win) {
     tool.eventCenter = function() {
         var eventList = {};
         var eventOnceList = {};
-        
+
         var _on = function(eventName, fun, isOnce) {
             if (!eventName) {
-                tool.error('No event name.');
+                new Error('No event name.');
             }
             else if (!fun) {
-                tool.error('No callback function.');
+                new Error('No callback function.');
             }
 
             if (!isOnce) {
@@ -410,7 +433,7 @@ void function(win) {
             },
             emit: function(eventName, data) {
                 if (!eventName) {
-                    tool.error('No emit event name.');
+                    new Error('No emit event name.');
                 }
                 var i = 0;
                 var l = 0;
