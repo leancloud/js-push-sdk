@@ -26,8 +26,8 @@ void function(win) {
 
     // 配置项
     var config = {
-        // 心跳时间（三分钟）
-        heartbeatsTime: 3 * 60 * 1000
+        // 心跳时间（一分钟）
+        heartbeatsTime: 30 * 1000
     };
 
     // 命名空间，挂载一些工具方法
@@ -44,6 +44,8 @@ void function(win) {
         close: 'close',
         // 接受到新的推送
         message: 'message',
+        // 断开重连
+        reuse: 'reuse',
         // 各种错误
         error: 'error'
     };
@@ -60,7 +62,11 @@ void function(win) {
             // 心跳的计时器
             heartbeatsTimer: undefined,
             // 事件中心
-            ec: undefined
+            ec: undefined,
+            // 是否是用户关闭，如果不是将会断开重连
+            closeFlag: false,
+            // reuse 事件的重试 timer
+            reuseTimer: undefined
         };
 
         // WebSocket Open
@@ -69,6 +75,7 @@ void function(win) {
             engine.loginPush(cache.options);
             // 启动心跳
             engine.heartbeats();
+            engine.guard();
             cache.ec.emit(eNameIndex.open);
         };
 
@@ -144,14 +151,14 @@ void function(win) {
                     channels: options.channels
                 }
             }, function(data) {
-                if (data.lcError) {
-                    setTimeout(function() {
-                        engine.sendId(options);
-                    }, 5000);
-                } else {
+                if (data) {
                     if (callback) {
                         callback(data);
                     }
+                } else {
+                    setTimeout(function() {
+                        engine.sendId(options);
+                    }, 5000);
                 }
             });
         };
@@ -167,14 +174,14 @@ void function(win) {
                 },
                 channels: options.channels
             }, function(data) {
-                if (data.lcError) {
+                if (data) {
+                    if (callback) {
+                        callback(null, data);
+                    }
+                } else {
                     setTimeout(function() {
                         engine.sendPush(options, callback);
                     }, 5000);
-                } else {
-                    if (callback) {
-                        callback(data);
-                    }
                 }
             });
         };
@@ -204,14 +211,23 @@ void function(win) {
             });
         };
 
+        // 守护进程，会派发 reuse 重连事件
+        engine.guard = function() {
+            cache.ec.on(eNameIndex.close, function() {
+                if (!cache.closeFlag) {
+                    cache.ec.emit(eNameIndex.reuse);
+                }
+            });
+        };
+
         engine.connect = function(options) {
             var server = options.server;
             if (server && tool.now() < server.expires) {
                 engine.createSocket(server.server);
             }
             else {
+                cache.ec.emit(eNameIndex.error);
                 new Error('WebSocket connet failed.');
-                // TODO: 派发一个 Error 事件
             }
         };
 
@@ -248,13 +264,12 @@ void function(win) {
             tool.ajax({
                 url: url
             }, function(data) {
-                if (!data.lcError) {
+                if (data) {
                     data.expires = tool.now() + data.ttl * 1000;
                     cache.server = data;
                     callback(data);
-                }
-                else {
-                    callback(tool.fail());
+                } else {
+                    cache.ec.emit(eNameIndex.error);
                 }
             });
         };
@@ -262,25 +277,32 @@ void function(win) {
         return {
             cache: cache,
             open: function(callback) {
+                var me = this;
                 engine.getServer(cache.options, function(data) {
-                    if (!data.lcError) {
+                    if (data) {
                         engine.connect({
                             server: cache.server
                         });
-                        cache.ec.once();
-                    }
-                    else {
-                        callback(tool.fail());
                     }
                 });
                 if (callback) {
-                    cache.ec.once('open', callback);
+                    cache.ec.on(eNameIndex.open, callback);
                 }
+                // 断开重连
+                cache.ec.once(eNameIndex.reuse + ' ' + eNameIndex.error, function() {
+                    if (cache.reuseTimer) {
+                        clearTimeout(cache.reuseTimer);
+                    }
+                    cache.reuseTimer = setTimeout(function() {
+                        me.open();
+                    }, 5000);
+                });
                 return this;
             },
-            // 表示关闭当前的 session 连接和 WebSocket 连接，并且回收内存
+            // 表示关闭 WebSocket 连接，并且回收内存
             close: function() {
-                engine.closeSession();
+                cache.closeFlag = true;
+                cache.ws.close();
                 return this;
             },
             on: function(eventName, callback) {
@@ -295,10 +317,19 @@ void function(win) {
                 cache.ec.emit(eventName, data);
                 return this;
             },
-            send: function(options, callback) {
-                options.appId = cache.options.appId;
-                options.appKey = cache.options.appKey;
-                engine.sendPush(options, callback);
+            send: function(argument, callback) {
+                var obj = {
+                    appId: cache.options.appId,
+                    appKey: cache.options.appKey
+                };
+                if (!argument.channels) {
+                    obj.data = argument;
+                    engine.sendPush(obj, callback);
+                } else {
+                    obj.data = argument.data;
+                    obj.channels = argument.channels;
+                    engine.sendPush(obj, callback);
+                }
                 return this;
             }
         };
@@ -316,6 +347,7 @@ void function(win) {
             new Error('Options must have appKey.');
         }
         else {
+            options.channels = options.channels || [];
             var pushObject = newPushObject();
             options.id = engine.getId(options);
             pushObject.cache.options = options;
@@ -339,19 +371,11 @@ void function(win) {
         return 'lc' + (Date.now().toString(36) + Math.random().toString(36).substring(2, 3));
     };
 
-    // Callback 返回的 data 中 lcError 表示失败
-    tool.fail = function(obj) {
-        obj = obj || {};
-        obj.lcError = true;
-        return obj;
-    };
-
     // 输出 log
     tool.log = function(msg) {
         console.log(msg);
     };
 
-    // Ajax get 请求
     tool.ajax = function(options, callback) {
         var url = options.url;
         var method = options.method || 'get';
@@ -369,8 +393,8 @@ void function(win) {
         xhr.onload = function() {
             callback(JSON.parse(xhr.responseText));
         };
-        xhr.onerror = function() {
-            callback(tool.fail());
+        xhr.onerror = function(data) {
+            callback(null, data);
             new Error('Network error.');
         };
         xhr.send(JSON.stringify(options.data));
@@ -409,27 +433,33 @@ void function(win) {
             else if (!fun) {
                 new Error('No callback function.');
             }
-
-            if (!isOnce) {
-                if (!eventList[eventName]) {
-                    eventList[eventName] = [];
+            var list = eventName.split(/\s+/);
+            for (var i = 0, l = list.length; i < l; i ++) {
+                if (list[i]) {
+                    if (!isOnce) {
+                        if (!eventList[list[i]]) {
+                            eventList[list[i]] = [];
+                        }
+                        eventList[list[i]].push(fun);
+                    }
+                    else {
+                        if (!eventOnceList[list[i]]) {
+                            eventOnceList[list[i]] = [];
+                        }
+                        eventOnceList[list[i]].push(fun);
+                    }
                 }
-                eventList[eventName].push(fun);
-            }
-            else {
-                if (!eventOnceList[eventName]) {
-                    eventOnceList[eventName] = [];
-                }
-                eventOnceList[eventName].push(fun);
             }
         };
 
         return {
             on: function(eventName, fun) {
                 _on(eventName, fun);
+                return this;
             },
             once: function(eventName, fun) {
                 _on(eventName, fun, true);
+                return this;
             },
             emit: function(eventName, data) {
                 if (!eventName) {
@@ -461,6 +491,7 @@ void function(win) {
                         eventOnceList[eventName][i].call(this, data);
                     }
                 }
+                return this;
             },
             remove: function(eventName, fun) {
                 if (eventList[eventName]) {
@@ -472,6 +503,7 @@ void function(win) {
                         }
                     }
                 }
+                return this;
             }
         };
     };
