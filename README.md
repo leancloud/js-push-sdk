@@ -21,13 +21,13 @@ LeanCloud 的缩写「lc」，新版 JavaScript SDK 都会基于此命名空间�
 
 描述：配置一个 Push 服务，生成一个 PushObject，提供后续调用的方法。
 
-参数：options {Object} （必须） 配置 Push 服务的参数。
+参数：options {Object} （必须） 配置 Push 服务的参数。其中包括：
 
-appId {String} （必须）应用的 AppId，在「控制台」-「设置」-「基本信息」中可以查看；
+* appId {String} （必须）应用的 AppId，在「控制台」-「设置」-「基本信息」中可以查看；
 
-appKey {String}（必须）应用的 AppKey；
+* appKey {String}（必须）应用的 AppKey；
 
-channels {Array}（可选）Push 的频道。默认不传，会发到所有频道；
+* channels {Array}（可选）Push 的频道。默认不传，会发到所有频道；
 
 返回：{Object} 返回 pushObject，可以做后续 Push 服务的方法，支持链式。
 
@@ -97,11 +97,11 @@ pushObject.send({
 
 描述：向服务器发送要推送的消息
 
-参数：options {Object} 相关配置参数
+参数：options {Object} 相关配置参数，其中包括：
 
-data {Object} 要发送的数据，JSON 格式；
+* data {Object} 要发送的数据，JSON 格式；
 
-channels {Array}（可选）Push 的频道。默认不传，会发到所有频道；
+* channels {Array}（可选）Push 的频道。默认不传，会发到所有频道；
 
 返回：{Object} 返回 pushObject，可以做后续 Push 服务的方法，支持链式。
 
