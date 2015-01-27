@@ -9,7 +9,7 @@
 void function(win) {
 
     // 当前版本
-    var VERSION = '1.0.0';
+    var VERSION = '2.0.0';
 
     // 获取命名空间
     var lc = win.lc || {};
