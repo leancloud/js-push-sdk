@@ -151,14 +151,14 @@ void function(win) {
                     channels: options.channels
                 }
             }, function(data) {
-                if (data.lcError) {
-                    setTimeout(function() {
-                        engine.sendId(options);
-                    }, 5000);
-                } else {
+                if (data) {
                     if (callback) {
                         callback(data);
                     }
+                } else {
+                    setTimeout(function() {
+                        engine.sendId(options);
+                    }, 5000);
                 }
             });
         };
@@ -174,14 +174,14 @@ void function(win) {
                 },
                 channels: options.channels
             }, function(data) {
-                if (data.lcError) {
+                if (data) {
+                    if (callback) {
+                        callback(null, data);
+                    }
+                } else {
                     setTimeout(function() {
                         engine.sendPush(options, callback);
                     }, 5000);
-                } else {
-                    if (callback) {
-                        callback(tool.fail(data));
-                    }
                 }
             });
         };
@@ -264,12 +264,11 @@ void function(win) {
             tool.ajax({
                 url: url
             }, function(data) {
-                if (!data.lcError) {
+                if (data) {
                     data.expires = tool.now() + data.ttl * 1000;
                     cache.server = data;
                     callback(data);
-                }
-                else {
+                } else {
                     cache.ec.emit(eNameIndex.error);
                 }
             });
@@ -280,7 +279,7 @@ void function(win) {
             open: function(callback) {
                 var me = this;
                 engine.getServer(cache.options, function(data) {
-                    if (!data.lcError) {
+                    if (data) {
                         engine.connect({
                             server: cache.server
                         });
@@ -372,20 +371,11 @@ void function(win) {
         return 'lc' + (Date.now().toString(36) + Math.random().toString(36).substring(2, 3));
     };
 
-    // Callback 返回的 data 中 lcError 表示失败
-    tool.fail = function(obj) {
-        obj = obj || {};
-        obj.lcError = true;
-        return obj;
-    };
-
     // 输出 log
     tool.log = function(msg) {
         console.log(msg);
     };
 
-    // Ajax get 请求
-    // TODO: 应该让 ajax 方法通用，不应该耦合 leancloud 的业务
     tool.ajax = function(options, callback) {
         var url = options.url;
         var method = options.method || 'get';
@@ -403,8 +393,8 @@ void function(win) {
         xhr.onload = function() {
             callback(JSON.parse(xhr.responseText));
         };
-        xhr.onerror = function() {
-            callback(tool.fail());
+        xhr.onerror = function(data) {
+            callback(null, data);
             new Error('Network error.');
         };
         xhr.send(JSON.stringify(options.data));
