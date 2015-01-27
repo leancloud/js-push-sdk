@@ -34,19 +34,19 @@ channels {Array}（可选）Push 的频道。默认不传，会发到所有频�
 例子：
 
 
-```
-    var pushObject = lc.push({
-        appId: ‘abcdefg123’,
-        appKey: ‘qwertyuio222’,
-        channels: [‘aaa’, ‘bbb’]
-    }).open(function() {
-        console.log(‘receiving message...’);
-    }).on(‘message’, function(data) {
-        console.log(data);
-    }).send({
-        data: {test: 123},
-        channels:[‘aaa’]
-    });
+```js
+var pushObject = lc.push({
+    appId: ‘abcdefg123’,
+    appKey: ‘qwertyuio222’,
+    channels: [‘aaa’, ‘bbb’]
+}).open(function() {
+    console.log(‘receiving message...’);
+}).on(‘message’, function(data) {
+    console.log(data);
+}).send({
+    data: {test: 123},
+    channels:[‘aaa’]
+});
 ```
 
 #### lc.push.version
@@ -57,8 +57,8 @@ channels {Array}（可选）Push 的频道。默认不传，会发到所有频�
 
 例子：
 
-```
-     console.log(lc.push.version);   // 2.0.0
+```js
+console.log(lc.push.version);   // 2.0.0
 ```
 
 #### pushObject.open(callback)
@@ -71,10 +71,10 @@ channels {Array}（可选）Push 的频道。默认不传，会发到所有频�
 
 例子：
 
-```
-      pushObject.open(function() {
-             console.log(‘open’);
-      });
+```js
+pushObject.open(function() {
+    console.log(‘open’);
+});
 ```
 
 #### pushObject.send(jsonObject)
@@ -87,10 +87,10 @@ channels {Array}（可选）Push 的频道。默认不传，会发到所有频�
 
 例子：
 
-```
-     pushObject.send({
-            test: 123
-     });
+```js
+pushObject.send({
+    test: 123
+});
 ```
 
 #### pushObject.send(options)
@@ -107,11 +107,11 @@ channels {Array}（可选）Push 的频道。默认不传，会发到所有频�
 
 例子：
 
-```
-     pushObject.send({
-            data: {test: 123},
-            channels: [‘cctv1’, ‘cctv2’]
-     });
+```js
+pushObject.send({
+    data: {test: 123},
+    channels: [‘cctv1’, ‘cctv2’]
+});
 ```
 
 #### pushObject.on(eventName, callback)
@@ -126,10 +126,10 @@ channels {Array}（可选）Push 的频道。默认不传，会发到所有频�
 
 例子：
 
-```
-     pushObject.on(‘message’, function(data) {
-            console.log(data);
-     });
+```js
+pushObject.on(‘message’, function(data) {
+    console.log(data);
+});
 ```
 
 #### pushObject.once(eventName, callback)
@@ -144,10 +144,10 @@ channels {Array}（可选）Push 的频道。默认不传，会发到所有频�
 
 例子：
 
-```
-     pushObject.once(’open’, function(data) {
-            console.log(data);
-     });
+```js
+pushObject.once(’open’, function(data) {
+    console.log(data);
+});
 ```
 
 #### pushObject.emit(eventName, data)
@@ -162,8 +162,8 @@ channels {Array}（可选）Push 的频道。默认不传，会发到所有频�
 
 例子：
 
-```
-     pushObject.emit(‘customEvent’, {test: 123});
+```js
+pushObject.emit(‘customEvent’, {test: 123});
 ```
 
 #### pushObject.close()
@@ -174,8 +174,8 @@ channels {Array}（可选）Push 的频道。默认不传，会发到所有频�
 
 例子：
 
-```
-      pushObject.close();
+```js
+pushObject.close();
 ```
 
 ### 事件
