@@ -336,6 +336,7 @@ void function(win) {
     };
 
     // 主函数，启动通信并获得 pushObject
+    // 因为只有需要接收 Push 的时候才需要开启服务器连接，所以这个方法没有 callback
     lc.push = function(options) {
         if (typeof options !== 'object') {
             new Error('lc.push need a argument at least.');
