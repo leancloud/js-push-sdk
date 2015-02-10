@@ -349,7 +349,12 @@ void function(win) {
         else {
             options.channels = options.channels || [];
             var pushObject = newPushObject();
-            options.id = engine.getId(options);
+            // 支持创建时传入installationId,这样可以跟已有的用户系统关联.
+            if(typeof options.installationId !== 'undefined'){
+                options.id =  options.installationId;
+            }else{
+                options.id = engine.getId(options);
+            }
             pushObject.cache.options = options;
             pushObject.cache.ec = tool.eventCenter();
             return pushObject;

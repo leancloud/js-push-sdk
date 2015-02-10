@@ -1,2 +1,4 @@
 # Ignore idea stuff
 .idea/*
+# Ignore key.js
+key.js
