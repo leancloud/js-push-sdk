@@ -110,12 +110,24 @@ void function(win) {
             cache.ws.send(JSON.stringify(data));
         };
 
+        var _channel = function(argument, callback, isRemove) {
+            var channels = [];
+            if (typeof argument === 'string') {
+                channels.push(argument);
+            } 
+            else {
+                channels = argument;
+            }
+            engine.channels(channels, callback, isRemove);
+        };
+
         engine.getId = function(options) {
             var itemName = 'LeanCloud-Push-Id-' + options.appId;
             var data = tool.storage(itemName);
             if (data && data.id) {
                 return data.id;
-            } else {
+            } 
+            else {
                 id = tool.getId();
                 options.id = id;
                 engine.sendId(options, function(data) {
@@ -133,7 +145,8 @@ void function(win) {
             var value = tool.storage(itemName);
             if (value) {
                 return value.objectId;
-            } else {
+            } 
+            else {
                 return null;
             }
         };
@@ -145,8 +158,7 @@ void function(win) {
                 appId: options.appId,
                 appKey: options.appKey,
                 data: {
-                    // TODO: 后续服务端要支持，改成 javascript
-                    deviceType: 'android',
+                    deviceType: options.deviceType,
                     installationId: options.id,
                     channels: options.channels
                 }
@@ -154,8 +166,10 @@ void function(win) {
                 if (data) {
                     if (callback) {
                         callback(data);
+                        cache.ec.emit('leancloud-send-id-ok');
                     }
-                } else {
+                } 
+                else {
                     setTimeout(function() {
                         engine.sendId(options);
                     }, 5000);
@@ -170,20 +184,56 @@ void function(win) {
                 appId: options.appId,
                 appKey: options.appKey,
                 data: {
-                    data: options.data
-                },
-                channels: options.channels
+                    data: options.data,
+                    channels: options.channels
+                }
             }, function(data) {
                 if (data) {
                     if (callback) {
                         callback(null, data);
                     }
-                } else {
+                } 
+                else {
                     setTimeout(function() {
                         engine.sendPush(options, callback);
                     }, 5000);
                 }
             });
+        };
+
+        engine.channels = function(channels, callback, isRemove) {
+            var objectId = engine.getObjectId(cache.options);
+            var data = {
+                installationId: cache.options.id,
+                deviceType: cache.options.deviceType
+            };
+            if (objectId) {
+                if (isRemove) {
+                    data.channels = {
+                        __op: 'Remove',
+                        objects: channels
+                    };
+                } 
+                else {
+                    data.channels = channels;
+                }
+                tool.ajax({
+                    url: 'https://leancloud.cn/1.1/installations/' + objectId,
+                    method: 'put',
+                    appId: cache.options.appId,
+                    appKey: cache.options.appKey,
+                    data: data
+                }, function(data) {
+                    if (callback) {
+                        callback(data);
+                    }
+                });
+            } 
+            else {
+                cache.ec.once('leancloud-send-id-ok', function() {
+                    engine.channels(channels, callback, isRemove);
+                });
+            }
         };
 
         engine.createSocket = function(server) {
@@ -268,7 +318,8 @@ void function(win) {
                     data.expires = tool.now() + data.ttl * 1000;
                     cache.server = data;
                     callback(data);
-                } else {
+                } 
+                else {
                     cache.ec.emit(eNameIndex.error);
                 }
             });
@@ -322,20 +373,37 @@ void function(win) {
                     appId: cache.options.appId,
                     appKey: cache.options.appKey
                 };
-                if (!argument.channels) {
+                if (!argument.channels &&
+                    !argument.where &&
+                    !argument.expiration_time && 
+                    !argument.expiration_interval &&
+                    !argument.push_time) {
+
                     obj.data = argument;
                     engine.sendPush(obj, callback);
-                } else {
+                } 
+                else {
                     obj.data = argument.data;
                     obj.channels = argument.channels;
                     engine.sendPush(obj, callback);
                 }
+                return this;
+            },
+            // 订阅频道
+            channel: function(argument, callback) {
+                _channel(argument, callback);
+                return this;
+            },
+            // 取消订阅
+            unChannel: function(argument, callback) {
+                _channel(argument, callback, true);
                 return this;
             }
         };
     };
 
     // 主函数，启动通信并获得 pushObject
+    // 因为只有需要接收 Push 的时候才需要开启服务器连接，所以这个方法没有 callback
     lc.push = function(options) {
         if (typeof options !== 'object') {
             new Error('lc.push need a argument at least.');
@@ -349,6 +417,9 @@ void function(win) {
         else {
             options.channels = options.channels || [];
             var pushObject = newPushObject();
+            // TODO: 后续服务端要支持，改成 javascript
+            options.deviceType = 'android';
+            // 这个 id 是针对设备的抽象
             options.id = engine.getId(options);
             pushObject.cache.options = options;
             pushObject.cache.ec = tool.eventCenter();
@@ -381,7 +452,7 @@ void function(win) {
         var method = options.method || 'get';
         var xhr = new XMLHttpRequest();
         xhr.open(method, url);
-        if (method === 'post') {
+        if (method === 'post' || method === 'put') {
             xhr.setRequestHeader('Content-Type', 'application/json');
         }
         if (options.appId) {
@@ -412,7 +483,8 @@ void function(win) {
                 value = JSON.stringify(value);
             }
             win.localStorage.setItem(name, value);
-        } else {
+        } 
+        else {
             var result = win.localStorage.getItem(name);
             if (/^[\{|\[]/.test(result) && /[\}|\]]$/.test(result)) {
                 result = JSON.parse(result);

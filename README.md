@@ -21,13 +21,16 @@ LeanCloud 的缩写「lc」，新版 JavaScript SDK 都会基于此命名空间�
 
 描述：配置一个 Push 服务，生成一个 PushObject，提供后续调用的方法。
 
-参数：options {Object} （必须） 配置 Push 服务的参数。其中包括：
+参数：
 
-* appId {String} （必须）应用的 AppId，在「控制台」-「设置」-「基本信息」中可以查看；
+* options {Object} （必须） 配置 Push 服务的参数。其中包括：
 
-* appKey {String}（必须）应用的 AppKey；
+    * appId {String} （必须）应用的 AppId，在「控制台」-「设置」-「基本信息」中可以查看；
 
-* channels {Array}（可选）Push 的频道。默认不传，会发到所有频道；
+    * appKey {String}（必须）应用的 AppKey；
+
+    * channels {Array}（可选）Push 的频道。默认不传，会发到所有频道；
+
 
 返回：{Object} 返回 pushObject，可以做后续 Push 服务的方法，支持链式。
 
@@ -65,7 +68,9 @@ console.log(lc.push.version);   // 2.0.0
 
 描述：开启接收服务端推送消息。如果只是需要发送数据到服务器，则不需要使用该方法，只需要使用 send 方法；
 
-参数：callback {Function}（可选）与服务器建立连接（WebSocket）之后，会触发的回调函数
+参数：
+
+* callback {Function}（可选）与服务器建立连接（WebSocket）之后，会触发的回调函数
 
 返回：{Object} 返回 pushObject，可以做后续 Push 服务的方法，支持链式。
 
@@ -81,7 +86,10 @@ pushObject.open(function() {
 
 描述：向服务器发送要推送的消息
 
-参数：jsonObject {Object} 要发送的数据，JSON 格式
+参数：
+
+* jsonObject {Object} 要发送的数据，JSON 格式，但是发送数据的字段名，不能是配置选项中的名字。
+不能是 channels、 where、 expiration_time、 expiration_interval、 push_time
 
 返回：{Object} 返回 pushObject，可以做后续 Push 服务的方法，支持链式。
 
@@ -97,11 +105,21 @@ pushObject.send({
 
 描述：向服务器发送要推送的消息
 
-参数：options {Object} 相关配置参数，其中包括：
+参数：
 
-* data {Object} 要发送的数据，JSON 格式；
+* options {Object} 相关配置参数，其中包括：
 
-* channels {Array}（可选）Push 的频道。默认不传，会发到所有频道；
+    * data {Object} 要发送的数据，JSON 格式；
+
+    * channels {Array}（可选）Push 的频道。默认不传，会发到所有频道；
+
+    * where {String}（可选） 一个查询 _Installation 表的查询条件 JSON 对象
+
+    * expiration_time {String}（可选） 消息过期的绝对日期时间
+
+    * expiration_interval {String}（可选） 消息过期的相对时间
+
+    * push_time {String}（可选） 定期推送时间
 
 返回：{Object} 返回 pushObject，可以做后续 Push 服务的方法，支持链式。
 
@@ -114,13 +132,63 @@ pushObject.send({
 });
 ```
 
+#### pushObject.channel(channels, callback)
+
+描述：增加订阅的频道
+
+参数：
+
+* channels {Array} 订阅的 channel 名字的数组，注意名字中不能含有横线「-」
+
+返回：{Object} 返回 pushObject，可以做后续 Push 服务的方法，支持链式。
+
+例子：
+
+```js
+pushObject.channel(['testChannel'], function() {
+    console.log('订阅成功！');
+});
+
+// 然后你就可以直接发送消息
+pushObject.send({
+    data: {test: 123},
+    channels: [‘testChannel’]
+});
+```
+
+#### pushObject.unChannel(channels, callback)
+
+描述：增加订阅的频道
+
+参数：
+
+* channels {Array} 订阅的 channel 名字的数组，注意名字中不能含有横线「-」
+
+返回：{Object} 返回 pushObject，可以做后续 Push 服务的方法，支持链式。
+
+例子：
+
+```js
+pushObject.unChannel('testChannel', function() {
+    console.log('取消订阅成功！');
+});
+
+// 然后你就可以直接发送消息
+pushObject.send({
+    data: {test: 123},
+    channels: [‘testChannel’]
+});
+```
+
 #### pushObject.on(eventName, callback)
 
 描述：监听当前 pushObject 内的事件，基于私有事件中心
 
-参数：eventName {String} （必须）监听的事件名称
+参数：
 
-参数：callback 事件的回调函数，当事件被派发时触发
+* eventName {String} （必须）监听的事件名称
+
+* callback 事件的回调函数，当事件被派发时触发
 
 返回：{Object} 返回 pushObject，可以做后续 Push 服务的方法，支持链式。
 
@@ -136,9 +204,11 @@ pushObject.on(‘message’, function(data) {
 
 描述：监听当前 pushObject 内的事件，基于私有事件中心，回调只会被触发一次
 
-参数：eventName {String} （必须）监听的事件名称
+参数：
 
-参数：callback 事件的回调函数，当事件被派发时触发
+* eventName {String} （必须）监听的事件名称
+
+* callback 事件的回调函数，当事件被派发时触发
 
 返回：{Object} 返回 pushObject，可以做后续 Push 服务的方法，支持链式。
 
@@ -154,9 +224,11 @@ pushObject.once(’open’, function(data) {
 
 描述：派发一个事件到 pushObject 内的私有事件中心
 
-参数：eventName {String} （必须）监听的事件名称
+参数：
 
-参数：data {Object} （可选）传递的参数，可以在监听的回调中通过第一个参数获取
+* eventName {String} （必须）监听的事件名称
+
+* data {Object} （可选）传递的参数，可以在监听的回调中通过第一个参数获取
 
 返回：{Object} 返回 pushObject，可以做后续 Push 服务的方法，支持链式。
 
