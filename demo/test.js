@@ -34,10 +34,18 @@ function createNew() {
         data: {wangxiao: 123}
     });
 
+    push.channel(['test123'], function(data) {
+        console.log('关注新的频道');
+    });
+
     setTimeout(function() {
         // 如果不加 channels，可以简单的使用 send 方法发送一个 json
         push.send({
             abc: 123
+        });
+
+        push.channel(['test123'], function(data) {
+            console.log('关注新的频道');
         });
     }, 5000);
 }

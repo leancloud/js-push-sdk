@@ -145,8 +145,7 @@ void function(win) {
                 appId: options.appId,
                 appKey: options.appKey,
                 data: {
-                    // TODO: 后续服务端要支持，改成 javascript
-                    deviceType: 'android',
+                    deviceType: options.deviceType,
                     installationId: options.id,
                     channels: options.channels
                 }
@@ -154,6 +153,7 @@ void function(win) {
                 if (data) {
                     if (callback) {
                         callback(data);
+                        cache.ec.emit('leancloud-send-id-ok');
                     }
                 } else {
                     setTimeout(function() {
@@ -184,6 +184,32 @@ void function(win) {
                     }, 5000);
                 }
             });
+        };
+
+        engine.onChannels = function(channels, callback) {
+            var objectId = engine.getObjectId(cache.options);
+            if (objectId) {
+                console.log(cache.options.deviceType);
+                tool.ajax({
+                    url: 'https://leancloud.cn/1.1/installations/' + objectId,
+                    method: 'put',
+                    appId: cache.options.appId,
+                    appKey: cache.options.appKey,
+                    data: {
+                        installationId: cache.options.id,
+                        deviceType: cache.options.deviceType,
+                        channels: channels
+                    }
+                }, function(data) {
+                    if (callback) {
+                        callback(data);
+                    }
+                });
+            } else {
+                cache.ec.once('leancloud-send-id-ok', function() {
+                    engine.onChannels(channels, callback);
+                });
+            }
         };
 
         engine.createSocket = function(server) {
@@ -331,6 +357,21 @@ void function(win) {
                     engine.sendPush(obj, callback);
                 }
                 return this;
+            },
+            // 订阅频道
+            channel: function(argument, callback) {
+                var channels = [];
+                if (typeof argument === 'string') {
+                    channels.push(argument);
+                } else {
+                    channels = argument;
+                }
+                engine.onChannels(channels, callback);
+                return this;
+            },
+            // 取消订阅
+            unChannel: function(argument, callback) {
+
             }
         };
     };
@@ -350,6 +391,9 @@ void function(win) {
         else {
             options.channels = options.channels || [];
             var pushObject = newPushObject();
+            // TODO: 后续服务端要支持，改成 javascript
+            options.deviceType = 'android';
+            // 这个 id 是针对设备的抽象
             options.id = engine.getId(options);
             pushObject.cache.options = options;
             pushObject.cache.ec = tool.eventCenter();
@@ -382,7 +426,7 @@ void function(win) {
         var method = options.method || 'get';
         var xhr = new XMLHttpRequest();
         xhr.open(method, url);
-        if (method === 'post') {
+        if (method === 'post' || method === 'put') {
             xhr.setRequestHeader('Content-Type', 'application/json');
         }
         if (options.appId) {
