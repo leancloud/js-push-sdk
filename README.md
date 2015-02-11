@@ -88,7 +88,8 @@ pushObject.open(function() {
 
 参数：
 
-* jsonObject {Object} 要发送的数据，JSON 格式
+* jsonObject {Object} 要发送的数据，JSON 格式，但是发送数据的字段名，不能是配置选项中的名字。
+不能是 channels、 where、 expiration_time、 expiration_interval、 push_time
 
 返回：{Object} 返回 pushObject，可以做后续 Push 服务的方法，支持链式。
 
@@ -112,6 +113,14 @@ pushObject.send({
 
     * channels {Array}（可选）Push 的频道。默认不传，会发到所有频道；
 
+    * where {String}（可选） 一个查询 _Installation 表的查询条件 JSON 对象
+
+    * expiration_time {String}（可选） 消息过期的绝对日期时间
+
+    * expiration_interval {String}（可选） 消息过期的相对时间
+
+    * push_time {String}（可选） 定期推送时间
+
 返回：{Object} 返回 pushObject，可以做后续 Push 服务的方法，支持链式。
 
 例子：
@@ -120,6 +129,54 @@ pushObject.send({
 pushObject.send({
     data: {test: 123},
     channels: [‘cctv1’, ‘cctv2’]
+});
+```
+
+#### pushObject.channel(channels, callback)
+
+描述：增加订阅的频道
+
+参数：
+
+* channels {Array} 订阅的 channel 名字的数组，注意名字中不能含有横线「-」
+
+返回：{Object} 返回 pushObject，可以做后续 Push 服务的方法，支持链式。
+
+例子：
+
+```js
+pushObject.channel(['testChannel'], function() {
+    console.log('订阅成功！');
+});
+
+// 然后你就可以直接发送消息
+pushObject.send({
+    data: {test: 123},
+    channels: [‘testChannel’]
+});
+```
+
+#### pushObject.unChannel(channels, callback)
+
+描述：增加订阅的频道
+
+参数：
+
+* channels {Array} 订阅的 channel 名字的数组，注意名字中不能含有横线「-」
+
+返回：{Object} 返回 pushObject，可以做后续 Push 服务的方法，支持链式。
+
+例子：
+
+```js
+pushObject.unChannel('testChannel', function() {
+    console.log('取消订阅成功！');
+});
+
+// 然后你就可以直接发送消息
+pushObject.send({
+    data: {test: 123},
+    channels: [‘testChannel’]
 });
 ```
 

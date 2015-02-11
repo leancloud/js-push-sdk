@@ -114,7 +114,8 @@ void function(win) {
             var channels = [];
             if (typeof argument === 'string') {
                 channels.push(argument);
-            } else {
+            } 
+            else {
                 channels = argument;
             }
             engine.channels(channels, callback, isRemove);
@@ -125,7 +126,8 @@ void function(win) {
             var data = tool.storage(itemName);
             if (data && data.id) {
                 return data.id;
-            } else {
+            } 
+            else {
                 id = tool.getId();
                 options.id = id;
                 engine.sendId(options, function(data) {
@@ -143,7 +145,8 @@ void function(win) {
             var value = tool.storage(itemName);
             if (value) {
                 return value.objectId;
-            } else {
+            } 
+            else {
                 return null;
             }
         };
@@ -165,7 +168,8 @@ void function(win) {
                         callback(data);
                         cache.ec.emit('leancloud-send-id-ok');
                     }
-                } else {
+                } 
+                else {
                     setTimeout(function() {
                         engine.sendId(options);
                     }, 5000);
@@ -188,7 +192,8 @@ void function(win) {
                     if (callback) {
                         callback(null, data);
                     }
-                } else {
+                } 
+                else {
                     setTimeout(function() {
                         engine.sendPush(options, callback);
                     }, 5000);
@@ -208,7 +213,8 @@ void function(win) {
                         __op: 'Remove',
                         objects: channels
                     };
-                } else {
+                } 
+                else {
                     data.channels = channels;
                 }
                 tool.ajax({
@@ -222,7 +228,8 @@ void function(win) {
                         callback(data);
                     }
                 });
-            } else {
+            } 
+            else {
                 cache.ec.once('leancloud-send-id-ok', function() {
                     engine.channels(channels, callback, isRemove);
                 });
@@ -311,7 +318,8 @@ void function(win) {
                     data.expires = tool.now() + data.ttl * 1000;
                     cache.server = data;
                     callback(data);
-                } else {
+                } 
+                else {
                     cache.ec.emit(eNameIndex.error);
                 }
             });
@@ -365,10 +373,16 @@ void function(win) {
                     appId: cache.options.appId,
                     appKey: cache.options.appKey
                 };
-                if (!argument.channels) {
+                if (!argument.channels &&
+                    !argument.where &&
+                    !argument.expiration_time && 
+                    !argument.expiration_interval &&
+                    !argument.push_time) {
+
                     obj.data = argument;
                     engine.sendPush(obj, callback);
-                } else {
+                } 
+                else {
                     obj.data = argument.data;
                     obj.channels = argument.channels;
                     engine.sendPush(obj, callback);
@@ -469,7 +483,8 @@ void function(win) {
                 value = JSON.stringify(value);
             }
             win.localStorage.setItem(name, value);
-        } else {
+        } 
+        else {
             var result = win.localStorage.getItem(name);
             if (/^[\{|\[]/.test(result) && /[\}|\]]$/.test(result)) {
                 result = JSON.parse(result);
