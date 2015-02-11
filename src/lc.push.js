@@ -110,6 +110,16 @@ void function(win) {
             cache.ws.send(JSON.stringify(data));
         };
 
+        var _channel = function(argument, callback, isRemove) {
+            var channels = [];
+            if (typeof argument === 'string') {
+                channels.push(argument);
+            } else {
+                channels = argument;
+            }
+            engine.channels(channels, callback, isRemove);
+        };
+
         engine.getId = function(options) {
             var itemName = 'LeanCloud-Push-Id-' + options.appId;
             var data = tool.storage(itemName);
@@ -170,9 +180,9 @@ void function(win) {
                 appId: options.appId,
                 appKey: options.appKey,
                 data: {
-                    data: options.data
-                },
-                channels: options.channels
+                    data: options.data,
+                    channels: options.channels
+                }
             }, function(data) {
                 if (data) {
                     if (callback) {
@@ -186,20 +196,27 @@ void function(win) {
             });
         };
 
-        engine.onChannels = function(channels, callback) {
+        engine.channels = function(channels, callback, isRemove) {
             var objectId = engine.getObjectId(cache.options);
+            var data = {
+                installationId: cache.options.id,
+                deviceType: cache.options.deviceType
+            };
             if (objectId) {
-                console.log(cache.options.deviceType);
+                if (isRemove) {
+                    data.channels = {
+                        __op: 'Remove',
+                        objects: channels
+                    };
+                } else {
+                    data.channels = channels;
+                }
                 tool.ajax({
                     url: 'https://leancloud.cn/1.1/installations/' + objectId,
                     method: 'put',
                     appId: cache.options.appId,
                     appKey: cache.options.appKey,
-                    data: {
-                        installationId: cache.options.id,
-                        deviceType: cache.options.deviceType,
-                        channels: channels
-                    }
+                    data: data
                 }, function(data) {
                     if (callback) {
                         callback(data);
@@ -207,7 +224,7 @@ void function(win) {
                 });
             } else {
                 cache.ec.once('leancloud-send-id-ok', function() {
-                    engine.onChannels(channels, callback);
+                    engine.channels(channels, callback, isRemove);
                 });
             }
         };
@@ -360,18 +377,13 @@ void function(win) {
             },
             // 订阅频道
             channel: function(argument, callback) {
-                var channels = [];
-                if (typeof argument === 'string') {
-                    channels.push(argument);
-                } else {
-                    channels = argument;
-                }
-                engine.onChannels(channels, callback);
+                _channel(argument, callback);
                 return this;
             },
             // 取消订阅
             unChannel: function(argument, callback) {
-
+                _channel(argument, callback, true);
+                return this;
             }
         };
     };

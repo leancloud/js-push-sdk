@@ -30,12 +30,17 @@ function createNew() {
 
     // 发送一条推送
     push.send({
-        channels: ['aaa'],
+        // channels: ['aaa'],
         data: {wangxiao: 123}
     });
 
     push.channel(['test123'], function(data) {
         console.log('关注新的频道');
+    });
+
+    push.send({
+        channels: ['test123'],
+        data: {test123: 123}
     });
 
     setTimeout(function() {
@@ -44,8 +49,14 @@ function createNew() {
             abc: 123
         });
 
-        push.channel(['test123'], function(data) {
-            console.log('关注新的频道');
+        push.unChannel(['test123'], function(data) {
+            console.log('取消关注新的频道');
+
+            push.send({
+                channels: ['test123'],
+                data: {test123: 123}
+            });
         });
+
     }, 5000);
 }
