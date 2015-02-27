@@ -190,9 +190,9 @@ void function(win) {
             }, function(data) {
                 if (data) {
                     if (callback) {
-                        callback(null, data);
+                        callback(data);
                     }
-                } 
+                }
                 else {
                     setTimeout(function() {
                         engine.sendPush(options, callback);

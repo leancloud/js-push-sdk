@@ -32,6 +32,12 @@ function createNew() {
     push.send({
         // channels: ['aaa'],
         data: {wangxiao: 123}
+    }, function(result) {
+        if (result) {
+            console.log('ok');
+        } else {
+            console.log('error');
+        }
     });
 
     push.channel(['test123'], function(data) {
