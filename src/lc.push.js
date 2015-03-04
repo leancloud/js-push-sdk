@@ -124,6 +124,14 @@ void function(win) {
         engine.getId = function(options) {
             var itemName = 'LeanCloud-Push-Id-' + options.appId;
             var data = tool.storage(itemName);
+            
+            // 兼容 js sdk 与 push sdk 一起使用时，共用 installationId
+            // if (!data) {
+            //     itemName = 'AV/' + options.appId + '/installationId';
+            //     data = {};
+            //     data.id = tool.storage(itemName);
+            // }
+
             if (data && data.id) {
                 return data.id;
             } 
