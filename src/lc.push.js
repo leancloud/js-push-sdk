@@ -425,8 +425,7 @@ void function(win) {
         else {
             options.channels = options.channels || [];
             var pushObject = newPushObject();
-            // TODO: 后续服务端要支持，改成 javascript
-            options.deviceType = 'android';
+            options.deviceType = 'web';
             // 这个 id 是针对设备的抽象
             options.id = engine.getId(options);
             pushObject.cache.options = options;
