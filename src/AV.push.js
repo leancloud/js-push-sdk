@@ -12,15 +12,13 @@ void function(win) {
     var VERSION = '2.0.0';
 
     // 获取命名空间
-    var lc = win.lc || {};
-    win.lc = lc;
-    // 历史遗留，同时获取 av 命名空间
-    // win.av = win.av || lc;
+    var AV = win.AV || {};
+    win.AV = AV;
 
     // AMD 加载支持
     if (typeof define === 'function' && define.amd) {
-        define('lc', [], function() {
-            return lc;
+        define('AV', [], function() {
+            return AV;
         });
     }
 
@@ -412,9 +410,9 @@ void function(win) {
 
     // 主函数，启动通信并获得 pushObject
     // 因为只有需要接收 Push 的时候才需要开启服务器连接，所以这个方法没有 callback
-    lc.push = function(options) {
+    AV.push = function(options) {
         if (typeof options !== 'object') {
-            new Error('lc.push need a argument at least.');
+            new Error('AV.push need a argument at least.');
         }
         else if (!options.appId) {
             new Error('Options must have appId.');
@@ -435,18 +433,18 @@ void function(win) {
     };
 
     // 赋值版本号
-    lc.push.version = VERSION;
+    AV.push.version = VERSION;
 
     // 挂载私有方法
-    lc.push._tool = tool;
-    lc.push._engine = engine;
+    AV.push._tool = tool;
+    AV.push._engine = engine;
 
     // 空函数
     tool.noop = function() {};
 
     // 获取一个唯一 id, 碰撞概率同一毫秒小于万分之一
     tool.getId = function() {
-        return 'lc' + (Date.now().toString(36) + Math.random().toString(36).substring(2, 3));
+        return 'AV' + (Date.now().toString(36) + Math.random().toString(36).substring(2, 3));
     };
 
     // 输出 log

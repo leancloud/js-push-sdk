@@ -12,12 +12,12 @@ _**by wangxiao 2015/01/27**_
 
 ## 全局命名空间
 
-### lc
+### AV
 
-LeanCloud 的缩写「lc」，新版 JavaScript SDK 都会基于此命名空间。
+LeanCloud 的缩写「AV」，新版 JavaScript SDK 都会基于此命名空间。
 
 ### 方法
-#### lc.push(options)
+#### AV.push(options)
 
 描述：配置一个 Push 服务，生成一个 PushObject，提供后续调用的方法。
 
@@ -38,7 +38,7 @@ LeanCloud 的缩写「lc」，新版 JavaScript SDK 都会基于此命名空间�
 
 
 ```js
-var pushObject = lc.push({
+var pushObject = AV.push({
     appId: ‘abcdefg123’,
     appKey: ‘qwertyuio222’,
     channels: [‘aaa’, ‘bbb’]
@@ -52,7 +52,7 @@ var pushObject = lc.push({
 });
 ```
 
-#### lc.push.version
+#### AV.push.version
 
 描述：获取当前 SDK 的版本信息
 
@@ -61,7 +61,7 @@ var pushObject = lc.push({
 例子：
 
 ```js
-console.log(lc.push.version);   // 2.0.0
+console.log(AV.push.version);   // 2.0.0
 ```
 
 #### pushObject.open(callback)

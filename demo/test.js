@@ -7,7 +7,7 @@ var push;
 createNew();
 
 function createNew() {
-    push = lc.push({
+    push = AV.push({
         appId: appId,
         appKey: appKey
     });
