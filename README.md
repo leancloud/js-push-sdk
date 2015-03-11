@@ -14,7 +14,7 @@ _**by wangxiao 2015/01/27**_
 
 ### AV
 
-LeanCloud 的缩写「AV」，新版 JavaScript SDK 都会基于此命名空间。
+LeanCloud JavaScript 相关 SDK 都会使用「AV」作为命名空间。
 
 ### 方法
 #### AV.push(options)
@@ -39,16 +39,16 @@ LeanCloud 的缩写「AV」，新版 JavaScript SDK 都会基于此命名空间�
 
 ```js
 var pushObject = AV.push({
-    appId: ‘abcdefg123’,
-    appKey: ‘qwertyuio222’,
-    channels: [‘aaa’, ‘bbb’]
+    appId: 'abcdefg123',
+    appKey: 'qwertyuio222',
+    channels: ['aaa', 'bbb']
 }).open(function() {
-    console.log(‘receiving message...’);
-}).on(‘message’, function(data) {
+    console.log('receiving message...');
+}).on('message', function(data) {
     console.log(data);
 }).send({
     data: {test: 123},
-    channels:[‘aaa’]
+    channels:['aaa']
 });
 ```
 
@@ -78,7 +78,7 @@ console.log(AV.push.version);   // 2.0.0
 
 ```js
 pushObject.open(function() {
-    console.log(‘open’);
+    console.log('open');
 });
 ```
 
@@ -128,7 +128,7 @@ pushObject.send({
 ```js
 pushObject.send({
     data: {test: 123},
-    channels: [‘cctv1’, ‘cctv2’]
+    channels: ['cctv1', 'cctv2']
 });
 ```
 
@@ -152,7 +152,7 @@ pushObject.channel(['testChannel'], function() {
 // 然后你就可以直接发送消息
 pushObject.send({
     data: {test: 123},
-    channels: [‘testChannel’]
+    channels: ['testChannel']
 });
 ```
 
@@ -176,7 +176,7 @@ pushObject.unChannel('testChannel', function() {
 // 然后你就可以直接发送消息
 pushObject.send({
     data: {test: 123},
-    channels: [‘testChannel’]
+    channels: ['testChannel']
 });
 ```
 
@@ -195,7 +195,7 @@ pushObject.send({
 例子：
 
 ```js
-pushObject.on(‘message’, function(data) {
+pushObject.on('message', function(data) {
     console.log(data);
 });
 ```
@@ -215,7 +215,7 @@ pushObject.on(‘message’, function(data) {
 例子：
 
 ```js
-pushObject.once(’open’, function(data) {
+pushObject.once('open', function(data) {
     console.log(data);
 });
 ```
@@ -235,7 +235,7 @@ pushObject.once(’open’, function(data) {
 例子：
 
 ```js
-pushObject.emit(‘customEvent’, {test: 123});
+pushObject.emit('customEvent', {test: 123});
 ```
 
 #### pushObject.close()
