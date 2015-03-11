@@ -7,6 +7,10 @@
   ],
   "description": "LeanCloud JavaScript Push SDK",
   "main": "src/AV.push.js",
+  "ignore": [
+    "demo",
+    "README.md"
+  ],
   "moduleType": [
     "amd",
     "globals"
