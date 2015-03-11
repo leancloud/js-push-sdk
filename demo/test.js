@@ -34,7 +34,7 @@ function createNew() {
         data: {LeanCloud: 123}
     }, function(result) {
         if (result) {
-            showLog('连接建立 ok');
+            showLog('推送成功发送');
         } else {
             showLog('error');
         }

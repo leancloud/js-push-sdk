@@ -24,7 +24,7 @@ void function(win) {
 
     // 配置项
     var config = {
-        // 心跳时间（一分钟）
+        // 心跳时间
         heartbeatsTime: 30 * 1000
     };
 
@@ -119,41 +119,31 @@ void function(win) {
             engine.channels(channels, callback, isRemove);
         };
 
-        engine.getId = function(options) {
-            var itemName = 'LeanCloud-Push-Id-' + options.appId;
-            var data = tool.storage(itemName);
+        engine.getId = function(options) {            
             
-            // 兼容 js sdk 与 push sdk 一起使用时，共用 installationId
-            // if (!data) {
-            //     itemName = 'AV/' + options.appId + '/installationId';
-            //     data = {};
-            //     data.id = tool.storage(itemName);
-            // }
+            // 兼容 js sdk 与 push sdk 一起使用时，共用 installationId ，该存储地址与 JS SDK 中名字一致
+            var itemName = 'AV/' + options.appId + '/installationId';
+            var data = {};
+            data.installationId = tool.storage(itemName);
 
-            if (data && data.id) {
-                return data.id;
+            // 如果没有与 js sdk 共用，则自建
+            if (!data.installationId) {
+                itemName = 'LeanCloud-Push-' + options.appId;
+                data = tool.storage(itemName);
+            }
+
+            if (data && data.installationId) {
+                return data.installationId;
             } 
             else {
                 id = tool.getId();
                 options.id = id;
                 engine.sendId(options, function(data) {
                     tool.storage(itemName, {
-                        id: id,
-                        objectId: data.objectId
+                        installationId: id
                     });
                 });
                 return id;
-            }
-        };
-
-        engine.getObjectId = function(options) {
-            var itemName = 'LeanCloud-Push-Id-' + options.appId;
-            var value = tool.storage(itemName);
-            if (value) {
-                return value.objectId;
-            } 
-            else {
-                return null;
             }
         };
 
@@ -208,38 +198,31 @@ void function(win) {
         };
 
         engine.channels = function(channels, callback, isRemove) {
-            var objectId = engine.getObjectId(cache.options);
             var data = {
                 installationId: cache.options.id,
                 deviceType: cache.options.deviceType
             };
-            if (objectId) {
-                if (isRemove) {
-                    data.channels = {
-                        __op: 'Remove',
-                        objects: channels
-                    };
-                } 
-                else {
-                    data.channels = channels;
-                }
-                tool.ajax({
-                    url: 'https://leancloud.cn/1.1/installations/' + objectId,
-                    method: 'put',
-                    appId: cache.options.appId,
-                    appKey: cache.options.appKey,
-                    data: data
-                }, function(data) {
-                    if (callback) {
-                        callback(data);
-                    }
-                });
+
+            if (isRemove) {
+                data.channels = {
+                    __op: 'Remove',
+                    objects: channels
+                };
             } 
             else {
-                cache.ec.once('leancloud-send-id-ok', function() {
-                    engine.channels(channels, callback, isRemove);
-                });
+                data.channels = channels;
             }
+            tool.ajax({
+                url: 'https://leancloud.cn/1.1/installations',
+                method: 'post',
+                appId: cache.options.appId,
+                appKey: cache.options.appKey,
+                data: data
+            }, function(data) {
+                if (callback) {
+                    callback(data);
+                }
+            });
         };
 
         engine.createSocket = function(server) {
