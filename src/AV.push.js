@@ -99,7 +99,7 @@ void function(win) {
         };
 
         var wsError = function(data) {
-            new Error(data);
+            throw(data);
             // TODO: 增加更加详细的错误处理
         };
 
@@ -174,16 +174,20 @@ void function(win) {
                     data: options.data,
                     channels: options.channels
                 }
-            }, function(data) {
+            }, function(data, error) {
                 if (data) {
                     if (callback) {
                         callback(data);
                     }
                 }
                 else {
-                    setTimeout(function() {
-                        engine.sendPush(options, callback);
-                    }, 5000);
+                    if (error.code === 403 || error.code === 404) {
+                        throw(error.error);
+                    } else {
+                        setTimeout(function() {
+                            engine.sendPush(options, callback);
+                        }, 5000);
+                    }
                 }
             });
         };
@@ -257,7 +261,7 @@ void function(win) {
             }
             else {
                 cache.ec.emit(eNameIndex.error);
-                new Error('WebSocket connet failed.');
+                throw('WebSocket connet failed.');
             }
         };
 
@@ -293,14 +297,18 @@ void function(win) {
             }
             tool.ajax({
                 url: url
-            }, function(data) {
+            }, function(data, error) {
                 if (data) {
                     data.expires = tool.now() + data.ttl * 1000;
                     cache.server = data;
                     callback(data);
                 } 
                 else {
-                    cache.ec.emit(eNameIndex.error);
+                    if (error.code === 403 || error.code === 404) {
+                        throw(error.error);
+                    } else {
+                        cache.ec.emit(eNameIndex.error);
+                    }
                 }
             });
         };
@@ -386,13 +394,13 @@ void function(win) {
     // 因为只有需要接收 Push 的时候才需要开启服务器连接，所以这个方法没有 callback
     AV.push = function(options) {
         if (typeof options !== 'object') {
-            new Error('AV.push need a argument at least.');
+            throw('AV.push need a argument at least.');
         }
         else if (!options.appId) {
-            new Error('Options must have appId.');
+            throw('Options must have appId.');
         }
         else if (!options.appKey) {
-            new Error('Options must have appKey.');
+            throw('Options must have appKey.');
         }
         else {
             options.channels = options.channels || [];
@@ -444,12 +452,16 @@ void function(win) {
         if (options.appKey) {
             xhr.setRequestHeader('X-AVOSCloud-Application-Key', options.appKey);
         }
-        xhr.onload = function() {
-            callback(JSON.parse(xhr.responseText));
+        xhr.onload = function(data) {
+            if (xhr.status === 200) {
+                callback(JSON.parse(xhr.responseText));
+            } else {
+                callback(null, JSON.parse(xhr.responseText));
+            }
         };
         xhr.onerror = function(data) {
             callback(null, data);
-            new Error('Network error.');
+            throw('Network error.');
         };
         xhr.send(JSON.stringify(options.data));
     };
@@ -483,10 +495,10 @@ void function(win) {
 
         var _on = function(eventName, fun, isOnce) {
             if (!eventName) {
-                new Error('No event name.');
+                throw('No event name.');
             }
             else if (!fun) {
-                new Error('No callback function.');
+                throw('No callback function.');
             }
             var list = eventName.split(/\s+/);
             for (var i = 0, l = list.length; i < l; i ++) {
@@ -518,7 +530,7 @@ void function(win) {
             },
             emit: function(eventName, data) {
                 if (!eventName) {
-                    new Error('No emit event name.');
+                    throw('No emit event name.');
                 }
                 var i = 0;
                 var l = 0;
