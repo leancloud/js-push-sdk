@@ -2,3 +2,11 @@
     margin: 0px;
     padding: 0px;
 }
+
+#result {
+    margin-top: 30px;
+}
+
+#result p {
+    font-size: 20px;
+}

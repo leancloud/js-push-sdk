@@ -14,34 +14,34 @@ function createNew() {
 
     // 可以链式调用
     push.open(function() {
-        console.log('可以接收推送');
+        showLog('可以接收推送');
     });
 
     // 监听推送消息
     push.on('message', function(data) {
-        console.log('message');
-        console.log(data);
+        showLog('message');
+        showLog(JSON.stringify(data));
     });
 
     // 监听网络异常
     push.on('reuse', function() {
-        console.log('网络中断正在重试');
+        showLog('网络中断正在重试');
     });
 
     // 发送一条推送
     push.send({
         // channels: ['aaa'],
-        data: {wangxiao: 123}
+        data: {LeanCloud: 123}
     }, function(result) {
         if (result) {
-            console.log('ok');
+            showLog('连接建立 ok');
         } else {
-            console.log('error');
+            showLog('error');
         }
     });
 
     push.channel(['test123'], function(data) {
-        console.log('关注新的频道');
+        showLog('关注新的频道');
     });
 
     push.send({
@@ -50,13 +50,14 @@ function createNew() {
     });
 
     setTimeout(function() {
+        
         // 如果不加 channels，可以简单的使用 send 方法发送一个 json
         push.send({
             abc: 123
         });
 
         push.unChannel(['test123'], function(data) {
-            console.log('取消关注新的频道');
+            showLog('取消关注新的频道');
 
             push.send({
                 channels: ['test123'],
@@ -65,4 +66,12 @@ function createNew() {
         });
 
     }, 5000);
+}
+
+function showLog(msg) {
+    console.log(msg);
+    var div = document.getElementById('result');
+    var p = document.createElement('p');
+    p.innerText = msg;
+    div.appendChild(p);
 }
