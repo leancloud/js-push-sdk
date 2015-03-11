@@ -12,21 +12,19 @@ void function(win) {
     var VERSION = '2.0.0';
 
     // 获取命名空间
-    var lc = win.lc || {};
-    win.lc = lc;
-    // 历史遗留，同时获取 av 命名空间
-    // win.av = win.av || lc;
+    var AV = win.AV || {};
+    win.AV = AV;
 
     // AMD 加载支持
     if (typeof define === 'function' && define.amd) {
-        define('lc', [], function() {
-            return lc;
+        define('AV', [], function() {
+            return AV;
         });
     }
 
     // 配置项
     var config = {
-        // 心跳时间（一分钟）
+        // 心跳时间
         heartbeatsTime: 30 * 1000
     };
 
@@ -101,7 +99,7 @@ void function(win) {
         };
 
         var wsError = function(data) {
-            new Error(data);
+            throw(data);
             // TODO: 增加更加详细的错误处理
         };
 
@@ -121,41 +119,22 @@ void function(win) {
             engine.channels(channels, callback, isRemove);
         };
 
-        engine.getId = function(options) {
-            var itemName = 'LeanCloud-Push-Id-' + options.appId;
-            var data = tool.storage(itemName);
+        engine.getId = function(options) {            
             
-            // 兼容 js sdk 与 push sdk 一起使用时，共用 installationId
-            // if (!data) {
-            //     itemName = 'AV/' + options.appId + '/installationId';
-            //     data = {};
-            //     data.id = tool.storage(itemName);
-            // }
+            // 兼容 js sdk 与 push sdk 一起使用时，共用 installationId ，该存储地址与 JS SDK 中名字一致
+            var itemName = 'AV/' + options.appId + '/installationId';
+            var installationId = tool.storage(itemName);
 
-            if (data && data.id) {
-                return data.id;
+            if (installationId) {
+                return installationId;
             } 
             else {
                 id = tool.getId();
                 options.id = id;
                 engine.sendId(options, function(data) {
-                    tool.storage(itemName, {
-                        id: id,
-                        objectId: data.objectId
-                    });
+                    tool.storage(itemName, id);
                 });
                 return id;
-            }
-        };
-
-        engine.getObjectId = function(options) {
-            var itemName = 'LeanCloud-Push-Id-' + options.appId;
-            var value = tool.storage(itemName);
-            if (value) {
-                return value.objectId;
-            } 
-            else {
-                return null;
             }
         };
 
@@ -195,53 +174,50 @@ void function(win) {
                     data: options.data,
                     channels: options.channels
                 }
-            }, function(data) {
+            }, function(data, error) {
                 if (data) {
                     if (callback) {
                         callback(data);
                     }
                 }
                 else {
-                    setTimeout(function() {
-                        engine.sendPush(options, callback);
-                    }, 5000);
+                    if (error.code === 403 || error.code === 404) {
+                        throw(error.error);
+                    } else {
+                        setTimeout(function() {
+                            engine.sendPush(options, callback);
+                        }, 5000);
+                    }
                 }
             });
         };
 
         engine.channels = function(channels, callback, isRemove) {
-            var objectId = engine.getObjectId(cache.options);
             var data = {
                 installationId: cache.options.id,
                 deviceType: cache.options.deviceType
             };
-            if (objectId) {
-                if (isRemove) {
-                    data.channels = {
-                        __op: 'Remove',
-                        objects: channels
-                    };
-                } 
-                else {
-                    data.channels = channels;
-                }
-                tool.ajax({
-                    url: 'https://leancloud.cn/1.1/installations/' + objectId,
-                    method: 'put',
-                    appId: cache.options.appId,
-                    appKey: cache.options.appKey,
-                    data: data
-                }, function(data) {
-                    if (callback) {
-                        callback(data);
-                    }
-                });
+
+            if (isRemove) {
+                data.channels = {
+                    __op: 'Remove',
+                    objects: channels
+                };
             } 
             else {
-                cache.ec.once('leancloud-send-id-ok', function() {
-                    engine.channels(channels, callback, isRemove);
-                });
+                data.channels = channels;
             }
+            tool.ajax({
+                url: 'https://leancloud.cn/1.1/installations',
+                method: 'post',
+                appId: cache.options.appId,
+                appKey: cache.options.appKey,
+                data: data
+            }, function(data) {
+                if (callback) {
+                    callback(data);
+                }
+            });
         };
 
         engine.createSocket = function(server) {
@@ -285,7 +261,7 @@ void function(win) {
             }
             else {
                 cache.ec.emit(eNameIndex.error);
-                new Error('WebSocket connet failed.');
+                throw('WebSocket connet failed.');
             }
         };
 
@@ -321,14 +297,18 @@ void function(win) {
             }
             tool.ajax({
                 url: url
-            }, function(data) {
+            }, function(data, error) {
                 if (data) {
                     data.expires = tool.now() + data.ttl * 1000;
                     cache.server = data;
                     callback(data);
                 } 
                 else {
-                    cache.ec.emit(eNameIndex.error);
+                    if (error.code === 403 || error.code === 404) {
+                        throw(error.error);
+                    } else {
+                        cache.ec.emit(eNameIndex.error);
+                    }
                 }
             });
         };
@@ -412,15 +392,15 @@ void function(win) {
 
     // 主函数，启动通信并获得 pushObject
     // 因为只有需要接收 Push 的时候才需要开启服务器连接，所以这个方法没有 callback
-    lc.push = function(options) {
+    AV.push = function(options) {
         if (typeof options !== 'object') {
-            new Error('lc.push need a argument at least.');
+            throw('AV.push need a argument at least.');
         }
         else if (!options.appId) {
-            new Error('Options must have appId.');
+            throw('Options must have appId.');
         }
         else if (!options.appKey) {
-            new Error('Options must have appKey.');
+            throw('Options must have appKey.');
         }
         else {
             options.channels = options.channels || [];
@@ -435,18 +415,22 @@ void function(win) {
     };
 
     // 赋值版本号
-    lc.push.version = VERSION;
+    AV.push.version = VERSION;
 
     // 挂载私有方法
-    lc.push._tool = tool;
-    lc.push._engine = engine;
+    AV.push._tool = tool;
+    AV.push._engine = engine;
 
     // 空函数
     tool.noop = function() {};
 
-    // 获取一个唯一 id, 碰撞概率同一毫秒小于万分之一
+    // 获取一个唯一 id，碰撞概率：基本不可能
     tool.getId = function() {
-        return 'lc' + (Date.now().toString(36) + Math.random().toString(36).substring(2, 3));
+        // 与时间相关的随机引子
+        var getIdItem = function() {
+            return Date.now().toString(36) + Math.random().toString(36).substring(2, 3);
+        };
+        return 'AV-' + getIdItem() + '-' + getIdItem() + '-' + getIdItem();
     };
 
     // 输出 log
@@ -468,12 +452,16 @@ void function(win) {
         if (options.appKey) {
             xhr.setRequestHeader('X-AVOSCloud-Application-Key', options.appKey);
         }
-        xhr.onload = function() {
-            callback(JSON.parse(xhr.responseText));
+        xhr.onload = function(data) {
+            if (xhr.status === 200) {
+                callback(JSON.parse(xhr.responseText));
+            } else {
+                callback(null, JSON.parse(xhr.responseText));
+            }
         };
         xhr.onerror = function(data) {
             callback(null, data);
-            new Error('Network error.');
+            throw('Network error.');
         };
         xhr.send(JSON.stringify(options.data));
     };
@@ -507,10 +495,10 @@ void function(win) {
 
         var _on = function(eventName, fun, isOnce) {
             if (!eventName) {
-                new Error('No event name.');
+                throw('No event name.');
             }
             else if (!fun) {
-                new Error('No callback function.');
+                throw('No callback function.');
             }
             var list = eventName.split(/\s+/);
             for (var i = 0, l = list.length; i < l; i ++) {
@@ -542,7 +530,7 @@ void function(win) {
             },
             emit: function(eventName, data) {
                 if (!eventName) {
-                    new Error('No emit event name.');
+                    throw('No emit event name.');
                 }
                 var i = 0;
                 var l = 0;
