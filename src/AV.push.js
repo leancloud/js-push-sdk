@@ -123,25 +123,16 @@ void function(win) {
             
             // 兼容 js sdk 与 push sdk 一起使用时，共用 installationId ，该存储地址与 JS SDK 中名字一致
             var itemName = 'AV/' + options.appId + '/installationId';
-            var data = {};
-            data.installationId = tool.storage(itemName);
+            var installationId = tool.storage(itemName);
 
-            // 如果没有与 js sdk 共用，则自建
-            if (!data.installationId) {
-                itemName = 'LeanCloud-Push-' + options.appId;
-                data = tool.storage(itemName);
-            }
-
-            if (data && data.installationId) {
-                return data.installationId;
+            if (installationId) {
+                return installationId;
             } 
             else {
                 id = tool.getId();
                 options.id = id;
                 engine.sendId(options, function(data) {
-                    tool.storage(itemName, {
-                        installationId: id
-                    });
+                    tool.storage(itemName, id);
                 });
                 return id;
             }
@@ -425,9 +416,13 @@ void function(win) {
     // 空函数
     tool.noop = function() {};
 
-    // 获取一个唯一 id, 碰撞概率同一毫秒小于万分之一
+    // 获取一个唯一 id，碰撞概率：基本不可能
     tool.getId = function() {
-        return 'AV' + (Date.now().toString(36) + Math.random().toString(36).substring(2, 3));
+        // 与时间相关的随机引子
+        var getIdItem = function() {
+            return Date.now().toString(36) + Math.random().toString(36).substring(2, 3);
+        };
+        return 'AV-' + getIdItem() + '-' + getIdItem() + '-' + getIdItem();
     };
 
     // 输出 log
