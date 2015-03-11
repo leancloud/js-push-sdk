@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "homepage": "http://leancloud.cn",
   "authors": [
-    "尼奥 <1988wangxiao@gmail.com>"
+    "WangXiao <xwang@leancloud.rocks>"
   ],
   "description": "LeanCloud JavaScript Push SDK",
   "main": "src/AV.push.js",
