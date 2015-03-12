@@ -40,7 +40,7 @@ function createNew() {
         }
     });
 
-    push.channel(['test123'], function(data) {
+    push.subscribe(['test123'], function(data) {
         showLog('关注新的频道');
     });
 
@@ -56,7 +56,7 @@ function createNew() {
             abc: 123
         });
 
-        push.unChannel(['test123'], function(data) {
+        push.unsubscribe(['test123'], function(data) {
             showLog('取消关注新的频道');
 
             push.send({
