@@ -378,12 +378,12 @@ void function(win) {
                 return this;
             },
             // 订阅频道
-            channel: function(argument, callback) {
+            subscribe: function(argument, callback) {
                 _channel(argument, callback);
                 return this;
             },
             // 取消订阅
-            unChannel: function(argument, callback) {
+            unsubscribe: function(argument, callback) {
                 _channel(argument, callback, true);
                 return this;
             }
