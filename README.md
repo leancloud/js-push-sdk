@@ -2,7 +2,7 @@
 
 ## 详细使用方法请看 [官方文档](https://leancloud.cn/docs/js_push.html)
 
-## 发布流程
+## 官方新版本发布流程
 
 * Github 生成 release 包
 * 发布到 bower
