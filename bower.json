@@ -1,7 +1,7 @@
 {
   "name": "leancloud-push.js",
   "version": "2.0.0",
-  "homepage": "http://leancloud.cn",
+  "homepage": "http://github.com/leancloud/js-push-sdk/",
   "authors": [
     "WangXiao <xwang@leancloud.rocks>"
   ],
