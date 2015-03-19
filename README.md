@@ -11,3 +11,4 @@
 ```
 bower register leancloud-push git@github.com:leancloud/js-push-sdk.git
 ```
+* 修改 changelog.md
