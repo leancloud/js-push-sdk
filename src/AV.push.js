@@ -557,6 +557,8 @@ void function(win) {
                         }
                         eventOnceList[eventName][i].call(this, data);
                     }
+                    // 清理 eventOnceList
+                    delete eventOnceList[eventName];
                 }
                 return this;
             },
