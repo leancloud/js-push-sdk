@@ -546,6 +546,8 @@ void function(win) {
                 for (; i < l; i ++) {
                     if (tempList[eventName][i] === fun) {
                         tempList[eventName].splice(i, 1);
+                        // 每次只清除一个相同事件绑定
+                        return;
                     }
                 }
             }
