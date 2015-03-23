@@ -352,6 +352,10 @@ void function(win) {
                 cache.ec.once(eventName, callback);
                 return this;
             },
+            off: function(eventName, fun) {
+                cache.ec.off(eventName, fun);
+                return this;
+            },
             emit: function(eventName, data) {
                 cache.ec.emit(eventName, data);
                 return this;
@@ -538,7 +542,7 @@ void function(win) {
                     i = 0;
                     l = eventList[eventName].length;
                     for (; i < l; i ++) {
-                        // 有可能执行过程中，删除了某个事件对应的方法
+                        // 有可能执行过程中，通过 off 删除了某个事件对应的方法
                         if (l > eventList[eventName].length) {
                             i --;
                             l = eventList[eventName].length;
@@ -550,7 +554,7 @@ void function(win) {
                     i = 0;
                     l = eventOnceList[eventName].length;
                     for (; i < l; i ++) {
-                        // 有可能执行过程中，删除了某个事件对应的方法
+                        // 有可能执行过程中，通过 off 删除了某个事件对应的方法
                         if (l > eventOnceList[eventName].length) {
                             i --;
                             l = eventOnceList[eventName].length;
@@ -562,7 +566,7 @@ void function(win) {
                 }
                 return this;
             },
-            remove: function(eventName, fun) {
+            off: function(eventName, fun) {
                 if (eventList[eventName]) {
                     var i = 0;
                     var l = eventList[eventName].length;
@@ -578,4 +582,3 @@ void function(win) {
     };
 
 } (window);
-
