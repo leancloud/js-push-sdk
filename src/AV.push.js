@@ -468,7 +468,7 @@ void function(win) {
         }
         xhr.onload = function(data) {
             // 检测认为 2xx 的返回都是成功
-            if (String(xhr.status).indexOf(2) === 0) {
+            if (xhr.status >= 200 && xhr.status < 300) {
                 callback(JSON.parse(xhr.responseText));
             } else {
                 callback(null, JSON.parse(xhr.responseText));
