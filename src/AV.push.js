@@ -457,7 +457,8 @@ void function(win) {
             xhr.setRequestHeader('X-AVOSCloud-Application-Key', options.appKey);
         }
         xhr.onload = function(data) {
-            if (xhr.status === 200) {
+            // 检测认为 2xx 的返回都是成功
+            if (String(xhr.status).indexOf(2) === 0) {
                 callback(JSON.parse(xhr.responseText));
             } else {
                 callback(null, JSON.parse(xhr.responseText));
