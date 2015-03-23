@@ -23,6 +23,12 @@ function createNew() {
         showLog(JSON.stringify(data));
     });
 
+    // receive 方法是监听 message 的快捷方法
+    push.receive(function(data) {
+        showLog('Receive 方法显示和监听 message 事件一致');
+        showLog(JSON.stringify(data));
+    });
+
     // 监听网络异常
     push.on('reuse', function() {
         showLog('网络中断正在重试');

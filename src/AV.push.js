@@ -390,6 +390,16 @@ void function(win) {
             unsubscribe: function(argument, callback) {
                 _channel(argument, callback, true);
                 return this;
+            },
+            // 接受消息
+            receive: function(callback) {
+                if (!callback) {
+                    throw('Receive must hava callback.');
+                }
+                cache.ec.on(eNameIndex.message, function(data) {
+                    callback(data);
+                });
+                return this;
             }
         };
     };
