@@ -352,6 +352,10 @@ void function(win) {
                 cache.ec.once(eventName, callback);
                 return this;
             },
+            off: function(eventName, fun) {
+                cache.ec.off(eventName, fun);
+                return this;
+            },
             emit: function(eventName, data) {
                 cache.ec.emit(eventName, data);
                 return this;
@@ -385,6 +389,16 @@ void function(win) {
             // 取消订阅
             unsubscribe: function(argument, callback) {
                 _channel(argument, callback, true);
+                return this;
+            },
+            // 接受消息
+            receive: function(callback) {
+                if (!callback) {
+                    throw('Receive must hava callback.');
+                }
+                cache.ec.on(eNameIndex.message, function(data) {
+                    callback(data);
+                });
                 return this;
             }
         };
@@ -453,7 +467,8 @@ void function(win) {
             xhr.setRequestHeader('X-AVOSCloud-Application-Key', options.appKey);
         }
         xhr.onload = function(data) {
-            if (xhr.status === 200) {
+            // 检测认为 2xx 的返回都是成功
+            if (xhr.status >= 200 && xhr.status < 300) {
                 callback(JSON.parse(xhr.responseText));
             } else {
                 callback(null, JSON.parse(xhr.responseText));
@@ -501,19 +516,38 @@ void function(win) {
                 throw('No callback function.');
             }
             var list = eventName.split(/\s+/);
+            var tempList;
+            if (!isOnce) {
+                tempList = eventList;
+            } 
+            else {
+                tempList = eventOnceList;
+            }
             for (var i = 0, l = list.length; i < l; i ++) {
                 if (list[i]) {
-                    if (!isOnce) {
-                        if (!eventList[list[i]]) {
-                            eventList[list[i]] = [];
-                        }
-                        eventList[list[i]].push(fun);
+                    if (!tempList[list[i]]) {
+                        tempList[list[i]] = [];
                     }
-                    else {
-                        if (!eventOnceList[list[i]]) {
-                            eventOnceList[list[i]] = [];
-                        }
-                        eventOnceList[list[i]].push(fun);
+                    tempList[list[i]].push(fun);
+                }
+            }
+        };
+        
+        var _off = function(eventName, fun, isOnce) {
+            var tempList;
+            if (!isOnce) {
+                tempList = eventList;
+            } else {
+                tempList = eventOnceList;
+            }
+            if (tempList[eventName]) {
+                var i = 0;
+                var l = tempList[eventName].length;
+                for (; i < l; i ++) {
+                    if (tempList[eventName][i] === fun) {
+                        tempList[eventName].splice(i, 1);
+                        // 每次只清除一个相同事件绑定
+                        return;
                     }
                 }
             }
@@ -538,7 +572,7 @@ void function(win) {
                     i = 0;
                     l = eventList[eventName].length;
                     for (; i < l; i ++) {
-                        // 有可能执行过程中，删除了某个事件对应的方法
+                        // 有可能执行过程中，通过 off 删除了某个事件对应的方法
                         if (l > eventList[eventName].length) {
                             i --;
                             l = eventList[eventName].length;
@@ -550,30 +584,22 @@ void function(win) {
                     i = 0;
                     l = eventOnceList[eventName].length;
                     for (; i < l; i ++) {
-                        // 有可能执行过程中，删除了某个事件对应的方法
+                        // 有可能执行过程中，通过 off 删除了某个事件对应的方法
                         if (l > eventOnceList[eventName].length) {
                             i --;
                             l = eventOnceList[eventName].length;
                         }
                         eventOnceList[eventName][i].call(this, data);
+                        _off(eventName, eventOnceList[eventName][i], true);
                     }
                 }
                 return this;
             },
-            remove: function(eventName, fun) {
-                if (eventList[eventName]) {
-                    var i = 0;
-                    var l = eventList[eventName].length;
-                    for (; i < l; i ++) {
-                        if (eventList[eventName][i] === fun) {
-                            eventList[eventName].splice(i, 1);
-                        }
-                    }
-                }
+            off: function(eventName, fun) {
+                _off(eventName, fun);
                 return this;
             }
         };
     };
 
 } (window);
-
