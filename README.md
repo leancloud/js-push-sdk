@@ -4,7 +4,8 @@
 
 ## 官方新版本发布流程
 
-* 修改代码中版本号
+* 修改代码中修改日期及版本号
+* 填写 changelog.md
 * Github 生成 release 包
 * 发布到 bower
 
