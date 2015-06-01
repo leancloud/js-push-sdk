@@ -285,7 +285,7 @@ void function(win) {
         engine.getServer = function(options, callback) {
             var appId = options.appId;
             // 是否获取 wss 的安全链接
-            var secure = options.secure || true;
+            var secure = options.secure;
             var url = '';
             var protocol = 'http://';
             if (win && win.location.protocol === 'https:') {
@@ -423,6 +423,8 @@ void function(win) {
             options.deviceType = 'web';
             // 这个 id 是针对设备的抽象
             options.id = engine.getId(options);
+            // 设置安全连接，默认为安全连接
+            options.secure = typeof(options.secure) === 'undefined' ? true : options.secure
             pushObject.cache.options = options;
             pushObject.cache.ec = tool.eventCenter();
             return pushObject;
