@@ -1,6 +1,6 @@
 /**
  * @author wangxiao
- * @date 2015-03-30
+ * @date 2015-06-01
  *
  * 每位工程师都有保持代码优雅的义务
  * Each engineer has a duty to keep the code elegant
@@ -375,8 +375,9 @@ void function(win) {
                     engine.sendPush(obj, callback);
                 } 
                 else {
-                    obj.data = argument.data;
-                    obj.channels = argument.channels;
+                    for (var k in argument) {
+                        obj[k] = argument[k];
+                    }
                     engine.sendPush(obj, callback);
                 }
                 return this;
