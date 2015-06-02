@@ -292,7 +292,7 @@ void function(win) {
                 protocol = 'https://';
             }
             var node = '';
-            switch (options.country) {
+            switch (options.region) {
                 case 'cn':
                     node = 'g0';
                 break;
@@ -431,8 +431,8 @@ void function(win) {
             var pushObject = newPushObject();
             options.deviceType = 'web';
             // 服务器地区选项，默认为中国大陆
-            options.country = options.country || 'cn';
-            switch(options.country) {
+            options.region = options.region || 'cn';
+            switch(options.region) {
                 case 'cn':
                     options.host = 'leancloud.cn';
                 break;
