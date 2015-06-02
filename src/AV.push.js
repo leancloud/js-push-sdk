@@ -323,6 +323,7 @@ void function(win) {
         };
 
         return {
+            installationId: '',
             cache: cache,
             open: function(callback) {
                 var me = this;
@@ -443,6 +444,8 @@ void function(win) {
             pushObject.cache.options = options;
             // 这个 id 是针对设备的抽象
             options.id = engine.getId(options);
+            // 暴露 installationId
+            pushObject.installationId = options.id;
             // 设置安全连接，默认为安全连接
             options.secure = typeof(options.secure) === 'undefined' ? true : options.secure;
             pushObject.cache.ec = tool.eventCenter();
