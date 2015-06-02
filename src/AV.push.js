@@ -140,7 +140,7 @@ void function(win) {
 
         engine.sendId = function(options, callback) {
             tool.ajax({
-                url: 'https://leancloud.cn/1.1/installations',
+                url: 'https://' + cache.options.host + '/1.1/installations',
                 method: 'post',
                 appId: options.appId,
                 appKey: options.appKey,
@@ -166,7 +166,7 @@ void function(win) {
 
         engine.sendPush = function(options, callback) {
             tool.ajax({
-                url: 'https://leancloud.cn/1.1/push',
+                url: 'https://' + cache.options.host + '/1.1/push',
                 method: 'post',
                 appId: options.appId,
                 appKey: options.appKey,
@@ -208,7 +208,7 @@ void function(win) {
                 data.channels = channels;
             }
             tool.ajax({
-                url: 'https://leancloud.cn/1.1/installations',
+                url: 'https://' + cache.options.host + '/1.1/installations',
                 method: 'post',
                 appId: cache.options.appId,
                 appKey: cache.options.appKey,
@@ -291,7 +291,16 @@ void function(win) {
             if (win && win.location.protocol === 'https:') {
                 protocol = 'https://';
             }
-            url = protocol + 'router-g0-push.avoscloud.com/v1/route?appId=' + appId ;
+            var node = '';
+            switch (options.country) {
+                case 'cn':
+                    node = 'g0';
+                break;
+                case 'us':
+                    node = 'a0';
+                break;
+            }
+            url = protocol + 'router-' + node + '-push.avoscloud.com/v1/route?appId=' + appId ;
             if (secure) {
               url += '&secure=1';
             }
@@ -421,11 +430,21 @@ void function(win) {
             options.channels = options.channels || [];
             var pushObject = newPushObject();
             options.deviceType = 'web';
+            // 服务器地区选项，默认为中国大陆
+            options.country = options.country || 'cn';
+            switch(options.country) {
+                case 'cn':
+                    options.host = 'leancloud.cn';
+                break;
+                case 'us':
+                    options.host = 'avoscloud.us';
+                break;
+            }
+            pushObject.cache.options = options;
             // 这个 id 是针对设备的抽象
             options.id = engine.getId(options);
             // 设置安全连接，默认为安全连接
-            options.secure = typeof(options.secure) === 'undefined' ? true : options.secure
-            pushObject.cache.options = options;
+            options.secure = typeof(options.secure) === 'undefined' ? true : options.secure;
             pushObject.cache.ec = tool.eventCenter();
             return pushObject;
         }
