@@ -299,6 +299,9 @@ void function(win) {
                 case 'us':
                     node = 'a0';
                 break;
+                default:
+                    throw('There is no this region.');
+                break;
             }
             url = protocol + 'router-' + node + '-push.avoscloud.com/v1/route?appId=' + appId ;
             if (secure) {
