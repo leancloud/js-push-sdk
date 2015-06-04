@@ -1,3 +1,8 @@
+# 2.0.3
+* 修正 where 参数无法发送的 bug
+* 支持美国节点
+* 暴露 installationId
+
 # 2.0.2
 * 修正 event center 中的 bug
 * 修正 ajax 对于 2xx 的返回码都应该认为正确

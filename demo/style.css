@@ -3,10 +3,24 @@
     padding: 0px;
 }
 
+body {
+    padding-top: 20px;
+    text-align: center;
+    font-size: 13px;
+}
+
+h1 {
+    font-size: 22px;
+}
+
 #result {
+    text-align: left;
     margin-top: 30px;
+    padding-left: 20%;
 }
 
 #result p {
-    font-size: 20px;
+    font-size: 15px;
+    margin: 2px;
 }
+

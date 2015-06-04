@@ -1,6 +1,6 @@
 /**
  * @author wangxiao
- * @date 2015-03-30
+ * @date 2015-06-02
  *
  * 每位工程师都有保持代码优雅的义务
  * Each engineer has a duty to keep the code elegant
@@ -9,7 +9,7 @@
 void function(win) {
 
     // 当前版本
-    var VERSION = '2.0.2';
+    var VERSION = '2.0.3';
 
     // 获取命名空间
     var AV = win.AV || {};
@@ -140,7 +140,7 @@ void function(win) {
 
         engine.sendId = function(options, callback) {
             tool.ajax({
-                url: 'https://leancloud.cn/1.1/installations',
+                url: 'https://' + cache.options.host + '/1.1/installations',
                 method: 'post',
                 appId: options.appId,
                 appKey: options.appKey,
@@ -166,7 +166,7 @@ void function(win) {
 
         engine.sendPush = function(options, callback) {
             tool.ajax({
-                url: 'https://leancloud.cn/1.1/push',
+                url: 'https://' + cache.options.host + '/1.1/push',
                 method: 'post',
                 appId: options.appId,
                 appKey: options.appKey,
@@ -208,7 +208,7 @@ void function(win) {
                 data.channels = channels;
             }
             tool.ajax({
-                url: 'https://leancloud.cn/1.1/installations',
+                url: 'https://' + cache.options.host + '/1.1/installations',
                 method: 'post',
                 appId: cache.options.appId,
                 appKey: cache.options.appKey,
@@ -285,13 +285,25 @@ void function(win) {
         engine.getServer = function(options, callback) {
             var appId = options.appId;
             // 是否获取 wss 的安全链接
-            var secure = options.secure || true;
+            var secure = options.secure;
             var url = '';
             var protocol = 'http://';
             if (win && win.location.protocol === 'https:') {
                 protocol = 'https://';
             }
-            url = protocol + 'router-g0-push.avoscloud.com/v1/route?appId=' + appId ;
+            var node = '';
+            switch (options.region) {
+                case 'cn':
+                    node = 'g0';
+                break;
+                case 'us':
+                    node = 'a0';
+                break;
+                default:
+                    throw('There is no this region.');
+                break;
+            }
+            url = protocol + 'router-' + node + '-push.avoscloud.com/v1/route?appId=' + appId ;
             if (secure) {
               url += '&secure=1';
             }
@@ -314,6 +326,7 @@ void function(win) {
         };
 
         return {
+            installationId: '',
             cache: cache,
             open: function(callback) {
                 var me = this;
@@ -375,8 +388,9 @@ void function(win) {
                     engine.sendPush(obj, callback);
                 } 
                 else {
-                    obj.data = argument.data;
-                    obj.channels = argument.channels;
+                    for (var k in argument) {
+                        obj[k] = argument[k];
+                    }
                     engine.sendPush(obj, callback);
                 }
                 return this;
@@ -420,9 +434,23 @@ void function(win) {
             options.channels = options.channels || [];
             var pushObject = newPushObject();
             options.deviceType = 'web';
+            // 服务器地区选项，默认为中国大陆
+            options.region = options.region || 'cn';
+            switch(options.region) {
+                case 'cn':
+                    options.host = 'leancloud.cn';
+                break;
+                case 'us':
+                    options.host = 'avoscloud.us';
+                break;
+            }
+            pushObject.cache.options = options;
             // 这个 id 是针对设备的抽象
             options.id = engine.getId(options);
-            pushObject.cache.options = options;
+            // 暴露 installationId
+            pushObject.installationId = options.id;
+            // 设置安全连接，默认为安全连接
+            options.secure = typeof(options.secure) === 'undefined' ? true : options.secure;
             pushObject.cache.ec = tool.eventCenter();
             return pushObject;
         }
