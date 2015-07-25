@@ -301,7 +301,6 @@ void function(win) {
                 break;
                 default:
                     throw('There is no this region.');
-                break;
             }
             url = protocol + 'router-' + node + '-push.leancloud.cn/v1/route?appId=' + appId ;
             if (secure) {
@@ -431,11 +430,25 @@ void function(win) {
             throw('Options must have appKey.');
         }
         else {
-            options.channels = options.channels || [];
-            var pushObject = newPushObject();
-            options.deviceType = 'web';
-            // 服务器地区选项，默认为中国大陆
-            options.region = options.region || 'cn';
+
+            // 通过判断插件库中的对象是否存在来检测是否需要关掉安全链接，在需要兼容 flash 的时候需要关掉，默认开启。
+            var secure = win.WebSocket.loadFlashPolicyFile ? false : true;
+
+            options = {
+                // LeanCloud 中唯一的服务 id
+                appId: options.appId,
+                // clientId 对应的就是 peerId，如果不传入服务器会自动生成，客户端没有持久化该数据。
+                peerId: options.clientId,
+                // 是否关闭 WebSocket 的安全链接，即由 wss 协议转为 ws 协议，关闭 SSL 保护。默认开启。
+                secure: typeof(options.secure) === 'undefined' ? secure : options.secure,
+                // 服务器地区选项，默认为中国大陆
+                region: options.region || 'cn',
+                // 推送的频道
+                channels: options.channels || [],
+                // 服务端用来记录和区分 SDK 的字段
+                deviceType: 'web'
+            };
+
             switch(options.region) {
                 case 'cn':
                     options.host = 'leancloud.cn';
@@ -444,13 +457,13 @@ void function(win) {
                     options.host = 'avoscloud.us';
                 break;
             }
+
+            var pushObject = newPushObject();
             pushObject.cache.options = options;
             // 这个 id 是针对设备的抽象
             options.id = engine.getId(options);
             // 暴露 installationId
             pushObject.installationId = options.id;
-            // 设置安全连接，默认为安全连接
-            options.secure = typeof(options.secure) === 'undefined' ? true : options.secure;
             pushObject.cache.ec = tool.eventCenter();
             return pushObject;
         }
