@@ -1,6 +1,6 @@
 /**
  * @author wangxiao
- * @date 2015-06-02
+ * @date 2015-07-25
  *
  * 每位工程师都有保持代码优雅的义务
  * Each engineer has a duty to keep the code elegant
@@ -112,22 +112,22 @@ void function(win) {
             var channels = [];
             if (typeof argument === 'string') {
                 channels.push(argument);
-            } 
+            }
             else {
                 channels = argument;
             }
             engine.channels(channels, callback, isRemove);
         };
 
-        engine.getId = function(options) {            
-            
+        engine.getId = function(options) {
+
             // 兼容 js sdk 与 push sdk 一起使用时，共用 installationId ，该存储地址与 JS SDK 中名字一致
             var itemName = 'AV/' + options.appId + '/installationId';
             var installationId = tool.storage(itemName);
 
             if (installationId) {
                 return installationId;
-            } 
+            }
             else {
                 id = tool.getId();
                 options.id = id;
@@ -155,7 +155,7 @@ void function(win) {
                         callback(data);
                         cache.ec.emit('leancloud-send-id-ok');
                     }
-                } 
+                }
                 else {
                     setTimeout(function() {
                         engine.sendId(options);
@@ -203,7 +203,7 @@ void function(win) {
                     __op: 'Remove',
                     objects: channels
                 };
-            } 
+            }
             else {
                 data.channels = channels;
             }
@@ -303,7 +303,7 @@ void function(win) {
                     throw('There is no this region.');
                 break;
             }
-            url = protocol + 'router-' + node + '-push.avoscloud.com/v1/route?appId=' + appId ;
+            url = protocol + 'router-' + node + '-push.leancloud.cn/v1/route?appId=' + appId ;
             if (secure) {
               url += '&secure=1';
             }
@@ -314,7 +314,7 @@ void function(win) {
                     data.expires = tool.now() + data.ttl * 1000;
                     cache.server = data;
                     callback(data);
-                } 
+                }
                 else {
                     if (error.code === 403 || error.code === 404) {
                         throw(error.error);
@@ -380,13 +380,13 @@ void function(win) {
                 };
                 if (!argument.channels &&
                     !argument.where &&
-                    !argument.expiration_time && 
+                    !argument.expiration_time &&
                     !argument.expiration_interval &&
                     !argument.push_time) {
 
                     obj.data = argument;
                     engine.sendPush(obj, callback);
-                } 
+                }
                 else {
                     for (var k in argument) {
                         obj[k] = argument[k];
@@ -521,7 +521,7 @@ void function(win) {
                 value = JSON.stringify(value);
             }
             win.localStorage.setItem(name, value);
-        } 
+        }
         else {
             var result = win.localStorage.getItem(name);
             if (/^[\{|\[]/.test(result) && /[\}|\]]$/.test(result)) {
@@ -547,7 +547,7 @@ void function(win) {
             var tempList;
             if (!isOnce) {
                 tempList = eventList;
-            } 
+            }
             else {
                 tempList = eventOnceList;
             }
@@ -560,7 +560,7 @@ void function(win) {
                 }
             }
         };
-        
+
         var _off = function(eventName, fun, isOnce) {
             var tempList;
             if (!isOnce) {
