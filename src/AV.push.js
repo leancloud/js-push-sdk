@@ -437,6 +437,8 @@ void function(win) {
             options = {
                 // LeanCloud 中唯一的服务 id
                 appId: options.appId,
+                // LeanCloud 中检测客户端权限的 key
+                appKey: options.appKey,
                 // clientId 对应的就是 peerId，如果不传入服务器会自动生成，客户端没有持久化该数据。
                 peerId: options.clientId,
                 // 是否关闭 WebSocket 的安全链接，即由 wss 协议转为 ws 协议，关闭 SSL 保护。默认开启。
