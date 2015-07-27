@@ -1,6 +1,6 @@
 /**
  * @author wangxiao
- * @date 2015-06-02
+ * @date 2015-07-25
  *
  * 每位工程师都有保持代码优雅的义务
  * Each engineer has a duty to keep the code elegant
@@ -112,22 +112,22 @@ void function(win) {
             var channels = [];
             if (typeof argument === 'string') {
                 channels.push(argument);
-            } 
+            }
             else {
                 channels = argument;
             }
             engine.channels(channels, callback, isRemove);
         };
 
-        engine.getId = function(options) {            
-            
+        engine.getId = function(options) {
+
             // 兼容 js sdk 与 push sdk 一起使用时，共用 installationId ，该存储地址与 JS SDK 中名字一致
             var itemName = 'AV/' + options.appId + '/installationId';
             var installationId = tool.storage(itemName);
 
             if (installationId) {
                 return installationId;
-            } 
+            }
             else {
                 id = tool.getId();
                 options.id = id;
@@ -155,7 +155,7 @@ void function(win) {
                         callback(data);
                         cache.ec.emit('leancloud-send-id-ok');
                     }
-                } 
+                }
                 else {
                     setTimeout(function() {
                         engine.sendId(options);
@@ -203,7 +203,7 @@ void function(win) {
                     __op: 'Remove',
                     objects: channels
                 };
-            } 
+            }
             else {
                 data.channels = channels;
             }
@@ -301,9 +301,8 @@ void function(win) {
                 break;
                 default:
                     throw('There is no this region.');
-                break;
             }
-            url = protocol + 'router-' + node + '-push.avoscloud.com/v1/route?appId=' + appId ;
+            url = protocol + 'router-' + node + '-push.leancloud.cn/v1/route?appId=' + appId ;
             if (secure) {
               url += '&secure=1';
             }
@@ -314,7 +313,7 @@ void function(win) {
                     data.expires = tool.now() + data.ttl * 1000;
                     cache.server = data;
                     callback(data);
-                } 
+                }
                 else {
                     if (error.code === 403 || error.code === 404) {
                         throw(error.error);
@@ -380,13 +379,13 @@ void function(win) {
                 };
                 if (!argument.channels &&
                     !argument.where &&
-                    !argument.expiration_time && 
+                    !argument.expiration_time &&
                     !argument.expiration_interval &&
                     !argument.push_time) {
 
                     obj.data = argument;
                     engine.sendPush(obj, callback);
-                } 
+                }
                 else {
                     for (var k in argument) {
                         obj[k] = argument[k];
@@ -431,11 +430,27 @@ void function(win) {
             throw('Options must have appKey.');
         }
         else {
-            options.channels = options.channels || [];
-            var pushObject = newPushObject();
-            options.deviceType = 'web';
-            // 服务器地区选项，默认为中国大陆
-            options.region = options.region || 'cn';
+
+            // 通过判断插件库中的对象是否存在来检测是否需要关掉安全链接，在需要兼容 flash 的时候需要关掉，默认开启。
+            var secure = win.WebSocket.loadFlashPolicyFile ? false : true;
+
+            options = {
+                // LeanCloud 中唯一的服务 id
+                appId: options.appId,
+                // LeanCloud 中检测客户端权限的 key
+                appKey: options.appKey,
+                // clientId 对应的就是 peerId，如果不传入服务器会自动生成，客户端没有持久化该数据。
+                peerId: options.clientId,
+                // 是否关闭 WebSocket 的安全链接，即由 wss 协议转为 ws 协议，关闭 SSL 保护。默认开启。
+                secure: typeof(options.secure) === 'undefined' ? secure : options.secure,
+                // 服务器地区选项，默认为中国大陆
+                region: options.region || 'cn',
+                // 推送的频道
+                channels: options.channels || [],
+                // 服务端用来记录和区分 SDK 的字段
+                deviceType: 'web'
+            };
+
             switch(options.region) {
                 case 'cn':
                     options.host = 'leancloud.cn';
@@ -444,13 +459,13 @@ void function(win) {
                     options.host = 'avoscloud.us';
                 break;
             }
+
+            var pushObject = newPushObject();
             pushObject.cache.options = options;
             // 这个 id 是针对设备的抽象
             options.id = engine.getId(options);
             // 暴露 installationId
             pushObject.installationId = options.id;
-            // 设置安全连接，默认为安全连接
-            options.secure = typeof(options.secure) === 'undefined' ? true : options.secure;
             pushObject.cache.ec = tool.eventCenter();
             return pushObject;
         }
@@ -521,7 +536,7 @@ void function(win) {
                 value = JSON.stringify(value);
             }
             win.localStorage.setItem(name, value);
-        } 
+        }
         else {
             var result = win.localStorage.getItem(name);
             if (/^[\{|\[]/.test(result) && /[\}|\]]$/.test(result)) {
@@ -547,7 +562,7 @@ void function(win) {
             var tempList;
             if (!isOnce) {
                 tempList = eventList;
-            } 
+            }
             else {
                 tempList = eventOnceList;
             }
@@ -560,7 +575,7 @@ void function(win) {
                 }
             }
         };
-        
+
         var _off = function(eventName, fun, isOnce) {
             var tempList;
             if (!isOnce) {
