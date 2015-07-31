@@ -509,6 +509,12 @@ void function(win) {
         if (options.appKey) {
             xhr.setRequestHeader('X-AVOSCloud-Application-Key', options.appKey);
         }
+
+        // IE9 中需要设置所有的 xhr 事件回调，不然可能会无法执行后续操作
+        xhr.onprogress = function(){};
+        xhr.ontimeout = function(){};
+        xhr.timeout = 0;
+
         xhr.onload = function(data) {
             // 检测认为 2xx 的返回都是成功
             if (xhr.status >= 200 && xhr.status < 300) {
