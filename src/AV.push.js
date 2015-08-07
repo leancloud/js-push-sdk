@@ -170,10 +170,7 @@ void function(win) {
                 method: 'post',
                 appId: options.appId,
                 appKey: options.appKey,
-                data: {
-                    data: options.data,
-                    channels: options.channels
-                }
+                data: options
             }, function(data, error) {
                 if (data) {
                     if (callback) {
