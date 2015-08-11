@@ -56,7 +56,7 @@ function createNew() {
     });
 
     setTimeout(function() {
-        
+
         // 如果不加 channels，可以简单的使用 send 方法发送一个 json
         push.send({
             abc: 123
