@@ -453,7 +453,7 @@ void function(win) {
                     options.host = 'leancloud.cn';
                 break;
                 case 'us':
-                    options.host = 'avoscloud.us';
+                    options.host = 'us-api.leancloud.cn';
                 break;
             }
 
