@@ -374,23 +374,12 @@ void function(win) {
                     appId: cache.options.appId,
                     appKey: cache.options.appKey
                 };
-                // 如果没有这些保留字段，则传入的就是 data 数据
-                if (!argument.channels &&
-                    !argument.where &&
-                    !argument.expiration_time &&
-                    !argument.expiration_interval &&
-                    !argument.push_time &&
-                    !argument.prod) {
-
-                    obj.data = argument;
-                    engine.sendPush(obj, callback);
+            
+                for (var k in argument) {
+                    obj[k] = argument[k];
                 }
-                else {
-                    for (var k in argument) {
-                        obj[k] = argument[k];
-                    }
-                    engine.sendPush(obj, callback);
-                }
+                engine.sendPush(obj, callback);
+                
                 return this;
             },
             // 订阅频道
