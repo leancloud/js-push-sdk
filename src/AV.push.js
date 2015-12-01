@@ -129,7 +129,7 @@ void function(win) {
                 return installationId;
             }
             else {
-                id = tool.getId();
+                var id = tool.getId();
                 options.id = id;
                 engine.sendId(options, function(data) {
                     tool.storage(itemName, id);
